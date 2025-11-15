@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Certificates - Swayam Khangaonkar</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4338ca;
+            --secondary: #06d6a0;
+            --accent: #f59e0b;
+            --dark: #0f172a;
+            --darker: #020617;
+            --light: #f8fafc;
+            --gray: #64748b;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, var(--darker) 0%, var(--dark) 100%);
+            color: var(--light);
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        /* Navigation */
+        .navbar {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            padding: 1.2rem 2rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: bold;
+            background: linear-gradient(45deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+
+        .nav-links a {
+            color: var(--light);
+            text-decoration: none;
+            transition: color 0.3s ease;
+            position: relative;
+            font-weight: 500;
+            font-size: 1rem;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary);
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--primary);
+            transition: width 0.3s ease;
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
+        /* Main Content */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            margin-top: 80px;
+        }
+
+        .section-title {
+            font-size: 2.5rem;
+            text-align: center;
+            margin-bottom: 3rem;
+            background: linear-gradient(45deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Certificates Grid */
+        .certificates-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            padding: 2rem 0;
+        }
+
+        .certificate-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .certificate-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .certificate-image {
+            width: 100%;
+            height: 200px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .certificate-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+
+        .certificate-card:hover .certificate-image img {
+            transform: scale(1.05);
+        }
+
+        .certificate-content {
+            padding: 1.5rem;
+        }
+
+        .certificate-content h3 {
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
+            color: var(--secondary);
+        }
+
+        .certificate-details {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .certificate-detail {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #cbd5e1;
+            font-size: 0.9rem;
+        }
+
+        .certificate-detail i {
+            color: var(--primary);
+            width: 16px;
+        }
+
+        .certificate-actions {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .certificate-btn {
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--primary);
+            border-radius: 6px;
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex: 1;
+            justify-content: center;
+        }
+
+        .certificate-btn:hover {
+            background: var(--primary);
+            color: var(--light);
+        }
+
+        .certificate-btn.view {
+            border-color: var(--secondary);
+            color: var(--secondary);
+        }
+
+        .certificate-btn.view:hover {
+            background: var(--secondary);
+            color: var(--dark);
+        }
+
+        /* Footer */
+        footer {
+            background: var(--darker);
+            padding: 3rem 2rem;
+            text-align: center;
+            margin-top: 4rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .social-links {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .social-links a {
+            color: var(--light);
+            font-size: 1.8rem;
+            transition: all 0.3s ease;
+            display: inline-block;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .social-links a:hover {
+            color: var(--primary);
+            transform: translateY(-5px);
+            background: rgba(99, 102, 241, 0.1);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+            
+            .certificates-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .certificate-actions {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">SK</div>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="projects.html">Projects</a></li>
+                <li><a href="hackathon.html">Hackathon</a></li>
+                <li><a href="certificates.html">Certificates</a></li>
+                <li><a href="contact.html">Contact</a></li>
+                <li><a href="about.html">About Me</a></li>
+                <li><a href="login.html">Admin</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main>
+        <div class="container">
+            <h1 class="section-title">My Certificates</h1>
+            
+            <div class="certificates-grid">
+                <!-- Certificate 1 -->
+                <div class="certificate-card">
+                    <div class="certificate-image">
+                        <img src="assets/certificate1.jpg" alt="Python for Data Science" onerror="this.src='https://via.placeholder.com/400x200/1e293b/6366f1?text=Python+Data+Science'">
+                    </div>
+                    <div class="certificate-content">
+                        <h3>Python for Data Science and Machine Learning</h3>
+                        <div class="certificate-details">
+                            <div class="certificate-detail">
+                                <i class="fas fa-university"></i>
+                                <span>Coursera</span>
+                            </div>
+                            <div class="certificate-detail">
+                                <i class="fas fa-calendar-alt"></i>
+                                <span>Issued: June 2023</span>
+                            </div>
+                            <div class="certificate-detail">
+                                <i class="fas fa-clock"></i>
+                                <span>Duration: 6 months</span>
+                            </div>
+                            <div class="certificate-detail">
+                                <i class="fas fa-star"></i>
+                                <span>Grade: 98%</span>
+                            </div>
+                        </div>
+                        <div class="certificate-actions">
+                            <a href="#" class="certificate-btn">
+                                <i class="fas fa-external-link-alt"></i> Verify
+                            </a>
+                            <a href="#" class="certificate-btn view">
+                                <i class="fas fa-eye"></i> View Certificate
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Certificate 2 -->
+                <div class="certificate-card">
+                    <div class="certificate-image">
+                        <img src="assets/certificate2.jpg" alt="Deep Learning Specialization" onerror="this.src='https://via.placeholder.com/400x200/1e293b/06d6a0?text=Deep+Learning'">
+                    </div>
+                    <div class="certificate-content">
+                        <h3>Deep Learning Specialization</h3>
+                        <div class="certificate-details">
+                            <div class="certificate-detail">
+                                <i class="fas fa-university"></i>
+                                <span>deeplearning.ai</span>
+                            </div>
+                            <div class="certificate-detail">
+                                <i class="fas fa-calendar-alt"></i>
+                                <span>Issued: April 2023</span>
+                            </div>
+                            <div class="certificate-detail">
+                                <i class="fas fa-clock"></i>
+                                <span>Duration: 5 months</span>
+                            </div>
+                            <div class="certificate-detail">
+                                <i class="fas fa-star"></i>
+                                <span>Grade: 96%</span>
+                            </div>
+                        </div>
+                        <div class="certificate-actions">
+                            <a href="#" class="certificate-btn">
+                                <i class="fas fa-external-link-alt"></i> Verify
+                            </a>
+                            <a href="#" class="certificate-btn view">
+                                <i class="fas fa-eye"></i> View Certificate
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Certificate 3 -->
+                <div class="certificate-card">
+                    <div class="certificate-image">
+                        <img src="assets/certificate3.jpg" alt="Google Cloud Fundamentals" onerror="this.src='https://via.placeholder.com/400x200/1e293b/f59e0b?text=Google+Cloud'">
+                    </div>
+                    <div class="certificate-content">
+                        <h3>Google Cloud Platform Fundamentals</h3>
+                        <div class="certificate-details">
+                            <div class="certificate-detail">
+                                <i class="fas fa-university"></i>
+                                <span>Google Cloud</span>
+                            </div>
+                            <div class="certificate-detail">
+                                <i class="fas fa-calendar-alt"></i>
+                                <span>Issued: March 2023</span>
+                            </div>
+                            <div class="certificate-detail">
+                                <i class="fas fa-clock"></i>
+                                <span>Duration: 2 months</span>
+                            </div>
+                            <div class="certificate-detail">
+                                <i class="fas fa-star"></i>
+                                <span>Grade: 94%</span>
+                            </div>
+                        </div>
+                        <div class="certificate-actions">
+                            <a href="#" class="certificate-btn">
+                                <i class="fas fa-external-link-alt"></i> Verify
+                            </a>
+                            <a href="#" class="certificate-btn view">
+                                <i class="fas fa-eye"></i> View Certificate
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Certificate 4 -->
+                <div class="certificate-card">
+                    <div class="certificate-image">
+                        <img src="assets/certificate4.jpg" alt="AWS Machine Learning" onerror="this.src='https://via.placeholder.com/400x200/1e293b/ec4899?text=AWS+ML'">
+                    </div>
+                    <div class="certificate-content">
+                        <h3>AWS Machine Learning Specialty</h3>
+                        <div class="certificate-details">
+                            <div class="certificate-detail">
+                                <i class="fas fa-university"></i>
+                                <span>Amazon Web Services</span>
+                            </div>
+                            <div class="certificate-detail">
+                                <i class="fas fa-calendar-alt"></i>
+                                <span>Issued: February 2023</span>
+                            </div>
+                            <div class="certificate-detail">
+                                <i class="fas fa-clock"></i>
+                                <span>Duration: 3 months</span>
+                            </div>
+                            <div class="certificate-detail">
+                                <i class="fas fa-star"></i>
+                                <span>Score: 875/1000</span>
+                            </div>
+                        </div>
+                        <div class="certificate-actions">
+                            <a href="#" class="certificate-btn">
+                                <i class="fas fa-external-link-alt"></i> Verify
+                            </a>
+                            <a href="#" class="certificate-btn view">
+                                <i class="fas fa-eye"></i> View Certificate
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Certificate 5 -->
+                <div class="certificate-card">
+                    <div class="certificate-image">
+                        <img src="assets/certificate5.jpg" alt="TensorFlow Developer" onerror="this.src='https://via.placeholder.com/400x200/1e293b/8b5cf6?text=TensorFlow'">
+                    </div>
+                    <div class="certificate-content">
+                        <h3>TensorFlow Developer Certificate</h3>
+                        <div class="certificate-details">
+                            <div class="certificate-detail">
+                                <i class="fas fa-university"></i>
+                                <span>TensorFlow</span>
+                            </div>
+                            <div class="certificate-detail">
+                                <i class="fas fa-calendar-alt"></i>
+                                <span>Issued: January 2023</span>
+                            </div>
+                            <div class="certificate-detail">
+                                <i class="fas fa-clock"></i>
+                                <span>Duration: 4 months</span>
+                            </div>
+                            <div class="certificate-detail">
+                                <i class="fas fa-star"></i>
+                                <span>Score: 92%</span>
+                            </div>
+                        </div>
+                        <div class="certificate-actions">
+                            <a href="#" class="certificate-btn">
+                                <i class="fas fa-external-link-alt"></i> Verify
+                            </a>
+                            <a href="#" class="certificate-btn view">
+                                <i class="fas fa-eye"></i> View Certificate
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Certificate 6 -->
+                <div class="certificate-card">
+                    <div class="certificate-image">
+                        <img src="assets/certificate6.jpg" alt="Microsoft Azure AI" onerror="this.src='https://via.placeholder.com/400x200/1e293b/14b8a6?text=Azure+AI'">
+                    </div>
+                    <div class="certificate-content">
+                        <h3>Microsoft Azure AI Engineer</h3>
+                        <div class="certificate-details">
+                            <div class="certificate-detail">
+                                <i class="fas fa-university"></i>
+                                <span>Microsoft</span>
+                            </div>
+                            <div class="certificate-detail">
+                                <i class="fas fa-calendar-alt"></i>
+                                <span>Issued: December 2022</span>
+                            </div>
+                            <div class="certificate-detail">
+                                <i class="fas fa-clock"></i>
+                                <span>Duration: 3 months</span>
+                            </div>
+                            <div class="certificate-detail">
+                                <i class="fas fa-star"></i>
+                                <span>Score: 89%</span>
+                            </div>
+                        </div>
+                        <div class="certificate-actions">
+                            <a href="#" class="certificate-btn">
+                                <i class="fas fa-external-link-alt"></i> Verify
+                            </a>
+                            <a href="#" class="certificate-btn view">
+                                <i class="fas fa-eye"></i> View Certificate
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="social-links">
+            <a href="https://instagram.com/kswayammmm" target="_blank" title="Instagram">
+                <i class="fab fa-instagram"></i>
+            </a>
+            <a href="https://linkedin.com/in/swayam-khangaonkar" target="_blank" title="LinkedIn">
+                <i class="fab fa-linkedin-in"></i>
+            </a>
+            <a href="https://x.com/yourusername" target="_blank" title="X">
+                <i class="fab fa-twitter"></i>
+            </a>
+            <a href="https://wa.me/yournumber" target="_blank" title="WhatsApp">
+                <i class="fab fa-whatsapp"></i>
+            </a>
+        </div>
+        <p>&copy; 2024 Swayam Khangaonkar. All rights reserved.</p>
+    </footer>
+
+    <script>
+        // Hide animation container if it exists
+        if (document.getElementById('animation-container')) {
+            document.getElementById('animation-container').style.display = 'none';
+        }
+    </script>
+</body>
+</html>
