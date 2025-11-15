@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Swayam Khangaonkar - Portfolio</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4338ca;
+            --secondary: #06d6a0;
+            --accent: #f59e0b;
+            --dark: #0f172a;
+            --darker: #020617;
+            --light: #f8fafc;
+            --gray: #64748b;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, var(--darker) 0%, var(--dark) 100%);
+            color: var(--light);
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        /* Animation Container */
+        #animation-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 9999;
+            background: linear-gradient(45deg, var(--darker), #1e293b);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        #animation-container.hidden {
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 1s ease-in-out;
+        }
+
+        .vr-container {
+            position: relative;
+            width: 300px;
+            height: 200px;
+            margin-bottom: 50px;
+        }
+
+        .vr-glasses {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .vr-lens {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: rgba(99, 102, 241, 0.1);
+            border: 3px solid var(--primary);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 0 30px rgba(99, 102, 241, 0.5);
+        }
+
+        .vr-lens::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, transparent, rgba(99, 102, 241, 0.3), transparent);
+            animation: lensGlow 3s linear infinite;
+        }
+
+        .vr-lens.left {
+            margin-right: 40px;
+        }
+
+        .vr-lens.right {
+            margin-left: 40px;
+        }
+
+        .vr-bridge {
+            position: absolute;
+            width: 40px;
+            height: 20px;
+            background: var(--primary);
+            border-radius: 5px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 2;
+        }
+
+        .intro-text {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .intro-text h1 {
+            font-size: 3.5rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(45deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            opacity: 0;
+            animation: fadeInUp 1s ease-out 0.5s forwards;
+        }
+
+        .intro-text p {
+            font-size: 1.5rem;
+            color: var(--gray);
+            opacity: 0;
+            animation: fadeInUp 1s ease-out 1s forwards;
+        }
+
+        .loading-container {
+            width: 300px;
+            text-align: center;
+        }
+
+        .loading-bar {
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+            overflow: hidden;
+            margin-bottom: 15px;
+        }
+
+        .loading-progress {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            border-radius: 2px;
+            transition: width 0.3s ease;
+        }
+
+        .loading-text {
+            font-size: 1.2rem;
+            color: var(--light);
+            font-weight: 600;
+        }
+
+        @keyframes lensGlow {
+            0% {
+                transform: translate(-50%, -50%) rotate(0deg);
+            }
+            100% {
+                transform: translate(-50%, -50%) rotate(360deg);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Navigation */
+        .navbar {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            padding: 1.2rem 2rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: bold;
+            background: linear-gradient(45deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+
+        .nav-links a {
+            color: var(--light);
+            text-decoration: none;
+            transition: color 0.3s ease;
+            position: relative;
+            font-weight: 500;
+            font-size: 1rem;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary);
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--primary);
+            transition: width 0.3s ease;
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
+        /* Main Content */
+        main {
+            opacity: 0;
+            animation: fadeInContent 1s ease-in-out 6.5s forwards;
+        }
+
+        @keyframes fadeInContent {
+            to {
+                opacity: 1;
+            }
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            margin-top: 80px;
+        }
+
+        /* Hero Section */
+        .hero {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+            min-height: 80vh;
+            padding: 4rem 0;
+        }
+
+        .hero-image {
+            position: relative;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+
+        .hero-image img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .hero-content h1 {
+            font-size: 3.5rem;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(45deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1.2;
+        }
+
+        .hero-content p {
+            font-size: 1.3rem;
+            line-height: 1.7;
+            margin-bottom: 2rem;
+            color: #cbd5e1;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .btn {
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 8px;
+            background: linear-gradient(45deg, var(--primary), var(--primary-dark));
+            color: var(--light);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+            font-size: 1.1rem;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(99, 102, 241, 0.4);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            border: 2px solid var(--primary);
+        }
+
+        /* Education Section */
+        .education-section {
+            padding: 4rem 0;
+        }
+
+        .section-title {
+            font-size: 2.5rem;
+            text-align: center;
+            margin-bottom: 3rem;
+            background: linear-gradient(45deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .education-grid {
+            display: grid;
+            gap: 2rem;
+        }
+
+        .education-card {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 2rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 2rem;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .education-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .edu-image {
+            border-radius: 10px;
+            overflow: hidden;
+            height: 200px;
+        }
+
+        .edu-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .edu-content h3 {
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+            color: var(--secondary);
+        }
+
+        .edu-details {
+            margin-bottom: 1.5rem;
+        }
+
+        .edu-details p {
+            margin-bottom: 0.5rem;
+            color: #cbd5e1;
+        }
+
+        .edu-learned {
+            margin-bottom: 1.5rem;
+        }
+
+        .edu-learned h4 {
+            color: var(--accent);
+            margin-bottom: 0.5rem;
+        }
+
+        .edu-learned ul {
+            list-style-position: inside;
+            color: #cbd5e1;
+        }
+
+        .edu-learned li {
+            margin-bottom: 0.3rem;
+        }
+
+        .marks-btn {
+            background: var(--accent);
+            color: var(--dark);
+            padding: 0.8rem 1.5rem;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 600;
+            display: inline-block;
+            transition: all 0.3s ease;
+        }
+
+        .marks-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(245, 158, 11, 0.4);
+        }
+
+        /* Footer */
+        footer {
+            background: var(--darker);
+            padding: 3rem 2rem;
+            text-align: center;
+            margin-top: 4rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .social-links {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .social-links a {
+            color: var(--light);
+            font-size: 1.8rem;
+            transition: all 0.3s ease;
+            display: inline-block;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .social-links a:hover {
+            color: var(--primary);
+            transform: translateY(-5px);
+            background: rgba(99, 102, 241, 0.1);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero {
+                grid-template-columns: 1fr;
+                text-align: center;
+                gap: 2rem;
+            }
+            
+            .nav-links {
+                display: none;
+            }
+            
+            .hero-content h1 {
+                font-size: 2.5rem;
+            }
+            
+            .intro-text h1 {
+                font-size: 2.5rem;
+            }
+            
+            .cta-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .btn {
+                width: 200px;
+            }
+
+            .vr-container {
+                width: 250px;
+                height: 150px;
+            }
+
+            .vr-lens {
+                width: 90px;
+                height: 90px;
+            }
+
+            .vr-lens::before {
+                width: 70px;
+                height: 70px;
+            }
+
+            .education-card {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+
+            .edu-image {
+                height: 250px;
+            }
+        }
+
+        /* Canvas styling */
+        canvas {
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        .floating-particles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- 3D Animation Container -->
+    <div id="animation-container">
+        <div class="floating-particles" id="particles-canvas"></div>
+        <div class="vr-container">
+            <div class="vr-glasses">
+                <div class="vr-lens left"></div>
+                <div class="vr-bridge"></div>
+                <div class="vr-lens right"></div>
+            </div>
+        </div>
+        <div class="intro-text">
+            <h1>Hi, I'm Swayam Khangaonkar</h1>
+            <p>AI/ML Engineer & Full-Stack Developer</p>
+        </div>
+        <div class="loading-container">
+            <div class="loading-bar">
+                <div class="loading-progress" id="loading-progress"></div>
+            </div>
+            <div class="loading-text" id="loading-text">0%</div>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">SK</div>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="projects.html">Projects</a></li>
+                <li><a href="hackathon.html">Hackathon</a></li>
+                <li><a href="certificates.html">Certificates</a></li>
+                <li><a href="contact.html">Contact</a></li>
+                <li><a href="about.html">About Me</a></li>
+                <li><a href="admin.html">Admin</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main>
+        <div class="container">
+            <!-- Hero Section -->
+            <section class="hero">
+                <div class="hero-image">
+                    <img src="assets/swayam.jpg" alt="Swayam Khangaonkar" onerror="this.style.display='none'">
+                </div>
+                <div class="hero-content">
+                    <h1>Innovating with AI & Machine Learning</h1>
+                    <p>I'm a passionate developer focused on creating intelligent solutions using cutting-edge technologies. Currently mastering Python and building expertise in AI/ML to solve complex real-world problems.</p>
+                    <div class="cta-buttons">
+                        <a href="about.html" class="btn">Learn More About Me</a>
+                        <a href="projects.html" class="btn btn-secondary">View My Projects</a>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Education Section -->
+            <section class="education-section">
+                <h2 class="section-title">Education</h2>
+                <div class="education-grid">
+                    <!-- School -->
+                    <div class="education-card">
+                        <div class="edu-image">
+                            <img src="assets/st_xaviers.jpg" alt="St. Xavier's High School">
+                        </div>
+                        <div class="edu-content">
+                            <h3>St. Xavier's High School</h3>
+                            <div class="edu-details">
+                                <p><strong>Location:</strong> Belgaum, Karnataka</p>
+                                <p><strong>Duration:</strong> 2015 - 2018</p>
+                                <p><strong>Board:</strong> State Board</p>
+                            </div>
+                            <div class="edu-learned">
+                                <h4>What I Learned:</h4>
+                                <ul>
+                                    <li>Strong foundation in Science and Mathematics</li>
+                                    <li>Basic computer literacy and programming concepts</li>
+                                    <li>Problem-solving and analytical thinking skills</li>
+                                    <li>Participated in science exhibitions and coding competitions</li>
+                                </ul>
+                            </div>
+                            <a href="#" class="marks-btn">10th Marks Card</a>
+                        </div>
+                    </div>
+
+                    <!-- Diploma -->
+                    <div class="education-card">
+                        <div class="edu-image">
+                            <img src="assets/polytechnic.jpg" alt="KLS's Shri Vasantrao Potdar Polytechnic">
+                        </div>
+                        <div class="edu-content">
+                            <h3>KLS's Shri Vasantrao Potdar Polytechnic</h3>
+                            <div class="edu-details">
+                                <p><strong>Diploma in Computer Science</strong></p>
+                                <p><strong>Location:</strong> Belgaum, Karnataka</p>
+                                <p><strong>Duration:</strong> 2018 - 2021</p>
+                                <p><strong>Percentage:</strong> 85%</p>
+                            </div>
+                            <div class="edu-learned">
+                                <h4>What I Learned:</h4>
+                                <ul>
+                                    <li>Programming fundamentals in C, C++, Java</li>
+                                    <li>Database management systems and SQL</li>
+                                    <li>Web development (HTML, CSS, JavaScript)</li>
+                                    <li>Software engineering principles</li>
+                                    <li>Computer networks and cybersecurity basics</li>
+                                    <li>Data structures and algorithms</li>
+                                </ul>
+                            </div>
+                            <a href="#" class="marks-btn">Diploma Marks Card (1st - 6th Sem)</a>
+                        </div>
+                    </div>
+
+                    <!-- Engineering -->
+                    <div class="education-card">
+                        <div class="edu-image">
+                            <img src="assets/jain_college.jpg" alt="Jain College of Engineering and Research">
+                        </div>
+                        <div class="edu-content">
+                            <h3>Jain College of Engineering and Research</h3>
+                            <div class="edu-details">
+                                <p><strong>Bachelor of Engineering in Computer Science</strong></p>
+                                <p><strong>Location:</strong> Belgaum, Karnataka</p>
+                                <p><strong>Duration:</strong> 2021 - 2024 (Lateral Entry)</p>
+                                <p><strong>Current CGPA:</strong> 8.5</p>
+                            </div>
+                            <div class="edu-learned">
+                                <h4>Currently Learning:</h4>
+                                <ul>
+                                    <li>Advanced Python programming and frameworks</li>
+                                    <li>Machine Learning algorithms and applications</li>
+                                    <li>Artificial Intelligence concepts</li>
+                                    <li>Deep Learning and Neural Networks</li>
+                                    <li>Data Science and analytics</li>
+                                    <li>Cloud computing and deployment</li>
+                                    <li>Full-stack web development</li>
+                                </ul>
+                            </div>
+                            <a href="#" class="marks-btn">Engineering Marks Card (3rd - 8th Sem)</a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="social-links">
+            <a href="https://instagram.com/kswayammmm" target="_blank" title="Instagram">
+                <i class="fab fa-instagram"></i>
+            </a>
+            <a href="https://linkedin.com/in/swayam-khangaonkar" target="_blank" title="LinkedIn">
+                <i class="fab fa-linkedin-in"></i>
+            </a>
+            <a href="https://x.com/yourusername" target="_blank" title="X">
+                <i class="fab fa-twitter"></i>
+            </a>
+            <a href="https://wa.me/yournumber" target="_blank" title="WhatsApp">
+                <i class="fab fa-whatsapp"></i>
+            </a>
+        </div>
+        <p>&copy; 2024 Swayam Khangaonkar. All rights reserved.</p>
+    </footer>
+
+    <!-- Three.js CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        // Check if animation has been shown in this session
+        if (!sessionStorage.getItem('animationShown')) {
+            sessionStorage.setItem('animationShown', 'true');
+            
+            class VRAnimation {
+                constructor() {
+                    this.progress = 0;
+                    this.loadingInterval = null;
+                    this.init();
+                }
+                
+                init() {
+                    this.createParticles();
+                    this.startLoadingAnimation();
+                    
+                    // Auto-remove after 6 seconds
+                    setTimeout(() => {
+                        this.fadeOut();
+                    }, 6000);
+                }
+                
+                createParticles() {
+                    const canvas = document.getElementById('particles-canvas');
+                    const scene = new THREE.Scene();
+                    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+                    const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+                    
+                    renderer.setSize(window.innerWidth, window.innerHeight);
+                    canvas.appendChild(renderer.domElement);
+                    
+                    // Create particles
+                    const particlesGeometry = new THREE.BufferGeometry();
+                    const particlesCount = 150;
+                    
+                    const posArray = new Float32Array(particlesCount * 3);
+                    const colorArray = new Float32Array(particlesCount * 3);
+                    const sizeArray = new Float32Array(particlesCount);
+                    
+                    for(let i = 0; i < particlesCount * 3; i++) {
+                        posArray[i] = (Math.random() - 0.5) * 10;
+                        colorArray[i] = Math.random() * 0.5 + 0.5;
+                        sizeArray[i/3] = Math.random() * 0.1 + 0.05;
+                    }
+                    
+                    particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+                    particlesGeometry.setAttribute('color', new THREE.BufferAttribute(colorArray, 3));
+                    particlesGeometry.setAttribute('size', new THREE.BufferAttribute(sizeArray, 1));
+                    
+                    const particlesMaterial = new THREE.PointsMaterial({
+                        size: 0.05,
+                        vertexColors: true,
+                        transparent: true,
+                        opacity: 0.6
+                    });
+                    
+                    const particlesMesh = new THREE.Points(particlesGeometry, particlesMaterial);
+                    scene.add(particlesMesh);
+                    
+                    camera.position.z = 5;
+                    
+                    // Animation
+                    const clock = new THREE.Clock();
+                    
+                    function animate() {
+                        requestAnimationFrame(animate);
+                        
+                        const elapsedTime = clock.getElapsedTime();
+                        
+                        particlesMesh.rotation.x = elapsedTime * 0.1;
+                        particlesMesh.rotation.y = elapsedTime * 0.2;
+                        
+                        // Move particles in wave pattern
+                        const positions = particlesGeometry.attributes.position.array;
+                        for (let i = 0; i < positions.length; i += 3) {
+                            positions[i] += Math.sin(elapsedTime + positions[i]) * 0.01;
+                            positions[i + 1] += Math.cos(elapsedTime + positions[i + 1]) * 0.01;
+                        }
+                        particlesGeometry.attributes.position.needsUpdate = true;
+                        
+                        renderer.render(scene, camera);
+                    }
+                    
+                    animate();
+                    
+                    // Handle resize
+                    window.addEventListener('resize', () => {
+                        camera.aspect = window.innerWidth / window.innerHeight;
+                        camera.updateProjectionMatrix();
+                        renderer.setSize(window.innerWidth, window.innerHeight);
+                    });
+                }
+                
+                startLoadingAnimation() {
+                    const progressBar = document.getElementById('loading-progress');
+                    const progressText = document.getElementById('loading-text');
+                    
+                    this.loadingInterval = setInterval(() => {
+                        this.progress += 1;
+                        progressBar.style.width = `${this.progress}%`;
+                        progressText.textContent = `${this.progress}%`;
+                        
+                        if (this.progress >= 100) {
+                            clearInterval(this.loadingInterval);
+                        }
+                    }, 50); // 50ms * 100 = 5 seconds for loading
+                }
+                
+                fadeOut() {
+                    const container = document.getElementById('animation-container');
+                    container.classList.add('hidden');
+                    setTimeout(() => {
+                        container.style.display = 'none';
+                    }, 1000);
+                }
+            }
+
+            // Initialize animation
+            document.addEventListener('DOMContentLoaded', () => {
+                new VRAnimation();
+            });
+        } else {
+            // Animation already shown, hide it immediately
+            document.getElementById('animation-container').style.display = 'none';
+            document.querySelector('main').style.opacity = '1';
+            document.querySelector('main').style.animation = 'none';
+        }
+    </script>
+</body>
+</html>
