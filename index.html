@@ -3,839 +3,1163 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Swayam Khangaonkar - Portfolio</title>
+    <title>Swayam Khangaonkar | Portfolio</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+
     <style>
         :root {
             --primary: #6366f1;
-            --primary-dark: #4338ca;
-            --secondary: #06d6a0;
-            --accent: #f59e0b;
+            --secondary: #a855f7;
             --dark: #0f172a;
-            --darker: #020617;
-            --light: #f8fafc;
-            --gray: #64748b;
         }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        
         body {
-            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, var(--darker) 0%, var(--dark) 100%);
-            color: var(--light);
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--dark);
+            color: white;
             overflow-x: hidden;
-            min-height: 100vh;
         }
 
-        /* Animation Container */
-        #animation-container {
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1e293b;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #4f46e5;
+            border-radius: 4px;
+        }
+
+        /* Animation for Rocket Loading */
+        #loading-screen {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
+            background: #000;
             z-index: 9999;
-            background: linear-gradient(45deg, var(--darker), #1e293b);
             display: flex;
-            justify-content: center;
-            align-items: center;
             flex-direction: column;
-        }
-
-        #animation-container.hidden {
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 1s ease-in-out;
-        }
-
-        .vr-container {
-            position: relative;
-            width: 300px;
-            height: 200px;
-            margin-bottom: 50px;
-        }
-
-        .vr-glasses {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            display: flex;
             justify-content: center;
             align-items: center;
+            transition: opacity 1s ease;
         }
 
-        .vr-lens {
-            width: 120px;
-            height: 120px;
-            border-radius: 50%;
-            background: rgba(99, 102, 241, 0.1);
-            border: 3px solid var(--primary);
+        .rocket-container {
             position: relative;
-            overflow: hidden;
-            box-shadow: 0 0 30px rgba(99, 102, 241, 0.5);
+            width: 200px;
+            height: 300px;
+            margin-bottom: 30px;
         }
 
-        .vr-lens::before {
+        .rocket {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 120px;
+            background: linear-gradient(to bottom, #ffcc00, #ff9900);
+            border-radius: 50% 50% 40% 40%;
+            animation: rocket-idle 2s infinite alternate;
+        }
+
+        .rocket::before {
             content: '';
             position: absolute;
-            top: 50%;
+            bottom: -20px;
             left: 50%;
-            transform: translate(-50%, -50%);
-            width: 100px;
-            height: 100px;
-            border-radius: 50%;
-            background: linear-gradient(45deg, transparent, rgba(99, 102, 241, 0.3), transparent);
-            animation: lensGlow 3s linear infinite;
-        }
-
-        .vr-lens.left {
-            margin-right: 40px;
-        }
-
-        .vr-lens.right {
-            margin-left: 40px;
-        }
-
-        .vr-bridge {
-            position: absolute;
+            transform: translateX(-50%);
             width: 40px;
             height: 20px;
-            background: var(--primary);
-            border-radius: 5px;
-            top: 50%;
+            background: linear-gradient(to bottom, #ff3300, #ff9900);
+            border-radius: 0 0 50% 50%;
+        }
+
+        .rocket-window {
+            position: absolute;
+            top: 30px;
             left: 50%;
-            transform: translate(-50%, -50%);
-            z-index: 2;
+            transform: translateX(-50%);
+            width: 25px;
+            height: 25px;
+            background-color: #87ceeb;
+            border-radius: 50%;
+            border: 2px solid #333;
         }
 
-        .intro-text {
-            text-align: center;
-            margin-bottom: 40px;
+        .rocket-fin {
+            position: absolute;
+            bottom: 10px;
+            width: 15px;
+            height: 40px;
+            background-color: #ff3300;
+            border-radius: 5px;
         }
 
-        .intro-text h1 {
-            font-size: 3.5rem;
-            margin-bottom: 1rem;
-            background: linear-gradient(45deg, var(--primary), var(--secondary));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+        .fin-left {
+            left: -10px;
+            transform: rotate(-30deg);
+        }
+
+        .fin-right {
+            right: -10px;
+            transform: rotate(30deg);
+        }
+
+        .flames {
+            position: absolute;
+            bottom: -80px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40px;
+            height: 80px;
+            background: linear-gradient(to bottom, #ff3300, #ff9900, transparent);
+            border-radius: 50% 50% 0 0;
             opacity: 0;
-            animation: fadeInUp 1s ease-out 0.5s forwards;
+            filter: blur(5px);
         }
 
-        .intro-text p {
+        .loading-text {
+            color: white;
             font-size: 1.5rem;
-            color: var(--gray);
-            opacity: 0;
-            animation: fadeInUp 1s ease-out 1s forwards;
-        }
-
-        .loading-container {
-            width: 300px;
+            margin-top: 20px;
             text-align: center;
         }
 
         .loading-bar {
-            width: 100%;
-            height: 4px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 2px;
+            width: 300px;
+            height: 10px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            margin-top: 20px;
             overflow: hidden;
-            margin-bottom: 15px;
         }
 
         .loading-progress {
             height: 100%;
             width: 0%;
-            background: linear-gradient(90deg, var(--primary), var(--secondary));
-            border-radius: 2px;
-            transition: width 0.3s ease;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            border-radius: 10px;
+            transition: width 0.1s linear;
         }
 
-        .loading-text {
-            font-size: 1.2rem;
-            color: var(--light);
-            font-weight: 600;
-        }
-
-        @keyframes lensGlow {
-            0% {
-                transform: translate(-50%, -50%) rotate(0deg);
-            }
-            100% {
-                transform: translate(-50%, -50%) rotate(360deg);
-            }
-        }
-
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        /* Navigation */
-        .navbar {
+        #white-screen {
             position: fixed;
             top: 0;
-            width: 100%;
-            background: rgba(15, 23, 42, 0.95);
-            backdrop-filter: blur(10px);
-            z-index: 1000;
-            padding: 1.2rem 2rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .nav-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .logo {
-            font-size: 1.8rem;
-            font-weight: bold;
-            background: linear-gradient(45deg, var(--primary), var(--secondary));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .nav-links {
-            display: flex;
-            list-style: none;
-            gap: 2rem;
-        }
-
-        .nav-links a {
-            color: var(--light);
-            text-decoration: none;
-            transition: color 0.3s ease;
-            position: relative;
-            font-weight: 500;
-            font-size: 1rem;
-        }
-
-        .nav-links a:hover {
-            color: var(--primary);
-        }
-
-        .nav-links a::after {
-            content: '';
-            position: absolute;
-            bottom: -5px;
             left: 0;
-            width: 0;
-            height: 2px;
-            background: var(--primary);
-            transition: width 0.3s ease;
-        }
-
-        .nav-links a:hover::after {
             width: 100%;
-        }
-
-        /* Main Content */
-        main {
+            height: 100%;
+            background-color: white;
+            z-index: 9998;
             opacity: 0;
-            animation: fadeInContent 1s ease-in-out 6.5s forwards;
+            pointer-events: none;
         }
 
-        @keyframes fadeInContent {
-            to {
-                opacity: 1;
-            }
+        @keyframes rocket-idle {
+            0% { transform: translateX(-50%) translateY(0); }
+            100% { transform: translateX(-50%) translateY(-10px); }
         }
 
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 2rem;
-            margin-top: 80px;
+        @keyframes rocket-launch {
+            0% { bottom: 0; opacity: 1; }
+            100% { bottom: 100%; opacity: 0; }
         }
 
-        /* Hero Section */
-        .hero {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 4rem;
-            align-items: center;
-            min-height: 80vh;
-            padding: 4rem 0;
+        @keyframes flames-grow {
+            0% { height: 0; opacity: 0; }
+            100% { height: 80px; opacity: 1; }
         }
 
-        .hero-image {
-            position: relative;
-            border-radius: 15px;
-            overflow: hidden;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
-        }
-
-        .hero-image img {
-            width: 100%;
-            height: auto;
-            display: block;
-        }
-
-        .hero-content h1 {
-            font-size: 3.5rem;
-            margin-bottom: 1.5rem;
-            background: linear-gradient(45deg, var(--primary), var(--secondary));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            line-height: 1.2;
-        }
-
-        .hero-content p {
-            font-size: 1.3rem;
-            line-height: 1.7;
-            margin-bottom: 2rem;
-            color: #cbd5e1;
-        }
-
-        .cta-buttons {
-            display: flex;
-            gap: 1rem;
-            margin-top: 2rem;
-        }
-
-        .btn {
-            padding: 1rem 2rem;
-            border: none;
-            border-radius: 8px;
-            background: linear-gradient(45deg, var(--primary), var(--primary-dark));
-            color: var(--light);
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            display: inline-block;
-            text-align: center;
-            font-size: 1.1rem;
-            position: relative;
-            overflow: hidden;
-            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
-        }
-
-        .btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 25px rgba(99, 102, 241, 0.4);
-        }
-
-        .btn-secondary {
-            background: transparent;
-            border: 2px solid var(--primary);
-        }
-
-        /* Education Section */
-        .education-section {
-            padding: 4rem 0;
-        }
-
-        .section-title {
-            font-size: 2.5rem;
-            text-align: center;
-            margin-bottom: 3rem;
-            background: linear-gradient(45deg, var(--primary), var(--secondary));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .education-grid {
-            display: grid;
-            gap: 2rem;
-        }
-
-        .education-card {
-            display: grid;
-            grid-template-columns: 300px 1fr;
-            gap: 2rem;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 15px;
-            padding: 2rem;
+        /* Glassmorphism */
+        .glass {
+            background: rgba(30, 41, 59, 0.7);
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
 
-        .education-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        /* Modal */
+        .modal {
+            transition: opacity 0.3s ease;
+            background: rgba(0,0,0,0.8);
         }
 
-        .edu-image {
-            border-radius: 10px;
-            overflow: hidden;
-            height: 200px;
+        /* Hide scrollbar for horizontal image lists */
+        .hide-scroll::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scroll {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
         }
 
-        .edu-image img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
+        /* Animation for background blobs */
+        @keyframes blob {
+            0% { transform: translate(0px, 0px) scale(1); }
+            33% { transform: translate(30px, -50px) scale(1.1); }
+            66% { transform: translate(-20px, 20px) scale(0.9); }
+            100% { transform: translate(0px, 0px) scale(1); }
         }
 
-        .edu-content h3 {
-            font-size: 1.8rem;
-            margin-bottom: 1rem;
-            color: var(--secondary);
+        .animate-blob {
+            animation: blob 7s infinite;
         }
 
-        .edu-details {
-            margin-bottom: 1.5rem;
+        .animation-delay-2000 {
+            animation-delay: 2s;
         }
 
-        .edu-details p {
-            margin-bottom: 0.5rem;
-            color: #cbd5e1;
-        }
-
-        .edu-learned {
-            margin-bottom: 1.5rem;
-        }
-
-        .edu-learned h4 {
-            color: var(--accent);
-            margin-bottom: 0.5rem;
-        }
-
-        .edu-learned ul {
-            list-style-position: inside;
-            color: #cbd5e1;
-        }
-
-        .edu-learned li {
-            margin-bottom: 0.3rem;
-        }
-
-        .marks-btn {
-            background: var(--accent);
-            color: var(--dark);
-            padding: 0.8rem 1.5rem;
-            border-radius: 6px;
-            text-decoration: none;
-            font-weight: 600;
-            display: inline-block;
-            transition: all 0.3s ease;
-        }
-
-        .marks-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(245, 158, 11, 0.4);
-        }
-
-        /* Footer */
-        footer {
-            background: var(--darker);
-            padding: 3rem 2rem;
-            text-align: center;
-            margin-top: 4rem;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .social-links {
-            display: flex;
-            justify-content: center;
-            gap: 2rem;
-            margin-bottom: 2rem;
-        }
-
-        .social-links a {
-            color: var(--light);
-            font-size: 1.8rem;
-            transition: all 0.3s ease;
-            display: inline-block;
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: rgba(255, 255, 255, 0.05);
-        }
-
-        .social-links a:hover {
-            color: var(--primary);
-            transform: translateY(-5px);
-            background: rgba(99, 102, 241, 0.1);
-        }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-            .hero {
-                grid-template-columns: 1fr;
-                text-align: center;
-                gap: 2rem;
-            }
-            
-            .nav-links {
-                display: none;
-            }
-            
-            .hero-content h1 {
-                font-size: 2.5rem;
-            }
-            
-            .intro-text h1 {
-                font-size: 2.5rem;
-            }
-            
-            .cta-buttons {
-                flex-direction: column;
-                align-items: center;
-            }
-            
-            .btn {
-                width: 200px;
-            }
-
-            .vr-container {
-                width: 250px;
-                height: 150px;
-            }
-
-            .vr-lens {
-                width: 90px;
-                height: 90px;
-            }
-
-            .vr-lens::before {
-                width: 70px;
-                height: 70px;
-            }
-
-            .education-card {
-                grid-template-columns: 1fr;
-                text-align: center;
-            }
-
-            .edu-image {
-                height: 250px;
-            }
-        }
-
-        /* Canvas styling */
-        canvas {
-            display: block;
-            position: absolute;
-            top: 0;
-            left: 0;
-        }
-
-        .floating-particles {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
+        .animation-delay-4000 {
+            animation-delay: 4s;
         }
     </style>
 </head>
 <body>
-    <!-- 3D Animation Container -->
-    <div id="animation-container">
-        <div class="floating-particles" id="particles-canvas"></div>
-        <div class="vr-container">
-            <div class="vr-glasses">
-                <div class="vr-lens left"></div>
-                <div class="vr-bridge"></div>
-                <div class="vr-lens right"></div>
+
+    <!-- Loading Screen -->
+    <div id="loading-screen">
+        <div class="rocket-container">
+            <div class="rocket">
+                <div class="rocket-window"></div>
+                <div class="rocket-fin fin-left"></div>
+                <div class="rocket-fin fin-right"></div>
+                <div class="flames"></div>
             </div>
         </div>
-        <div class="intro-text">
-            <h1>Hi, I'm Swayam Khangaonkar</h1>
-            <p>AI/ML Engineer & Full-Stack Developer</p>
-        </div>
-        <div class="loading-container">
-            <div class="loading-bar">
-                <div class="loading-progress" id="loading-progress"></div>
-            </div>
-            <div class="loading-text" id="loading-text">0%</div>
+        <div class="loading-text">Preparing for Launch...</div>
+        <div class="loading-bar">
+            <div class="loading-progress" id="progress-bar"></div>
         </div>
     </div>
+    
+    <div id="white-screen" class="white-flash"></div>
 
-    <!-- Navigation -->
-    <nav class="navbar">
-        <div class="nav-container">
-            <div class="logo">SK</div>
-            <ul class="nav-links">
-                <li><a href="index.html">Home</a></li>
-                <li><a href="projects.html">Projects</a></li>
-                <li><a href="hackathon.html">Hackathon</a></li>
-                <li><a href="certificates.html">Certificates</a></li>
-                <li><a href="contact.html">Contact</a></li>
-                <li><a href="about.html">About Me</a></li>
-                <li><a href="admin.html">Admin</a></li>
-            </ul>
-        </div>
-    </nav>
-
-    <!-- Main Content -->
-    <main>
-        <div class="container">
-            <!-- Hero Section -->
-            <section class="hero">
-                <div class="hero-image">
-                    <img src="assets/swayam.jpg" alt="Swayam Khangaonkar" onerror="this.style.display='none'">
-                </div>
-                <div class="hero-content">
-                    <h1>Innovating with AI & Machine Learning</h1>
-                    <p>I'm a passionate developer focused on creating intelligent solutions using cutting-edge technologies. Currently mastering Python and building expertise in AI/ML to solve complex real-world problems.</p>
-                    <div class="cta-buttons">
-                        <a href="about.html" class="btn">Learn More About Me</a>
-                        <a href="projects.html" class="btn btn-secondary">View My Projects</a>
+    <!-- Main Application -->
+    <div id="app" class="hidden">
+        
+        <!-- Navigation -->
+        <nav class="fixed top-0 w-full z-50 glass">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex items-center justify-between h-16">
+                    <div class="flex items-center cursor-pointer" onclick="router('home')">
+                        <span class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-purple-600">showcase.com</span>
+                    </div>
+                    <div class="hidden md:block">
+                        <div class="ml-10 flex items-baseline space-x-4">
+                            <button onclick="router('home')" class="hover:text-indigo-400 px-3 py-2 rounded-md text-sm font-medium transition">Home</button>
+                            <button onclick="router('education')" class="hover:text-indigo-400 px-3 py-2 rounded-md text-sm font-medium transition">Education</button>
+                            <button onclick="router('projects')" class="hover:text-indigo-400 px-3 py-2 rounded-md text-sm font-medium transition">Projects</button>
+                            <button onclick="router('hackathons')" class="hover:text-indigo-400 px-3 py-2 rounded-md text-sm font-medium transition">Hackathons</button>
+                            <button onclick="router('certificates')" class="hover:text-indigo-400 px-3 py-2 rounded-md text-sm font-medium transition">Certificates</button>
+                            <button onclick="router('about')" class="hover:text-indigo-400 px-3 py-2 rounded-md text-sm font-medium transition">About Me</button>
+                            <button onclick="router('admin')" id="nav-admin-btn" class="bg-gray-800 hover:bg-gray-700 px-3 py-2 rounded-md text-sm font-medium transition border border-gray-600">Admin</button>
+                        </div>
+                    </div>
+                    <!-- Mobile menu button -->
+                    <div class="-mr-2 flex md:hidden">
+                        <button onclick="toggleMobileMenu()" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-white hover:bg-gray-700 focus:outline-none">
+                            <i class="fas fa-bars"></i>
+                        </button>
                     </div>
                 </div>
-            </section>
-
-            <!-- Education Section -->
-            <section class="education-section">
-                <h2 class="section-title">Education</h2>
-                <div class="education-grid">
-                    <!-- School -->
-                    <div class="education-card">
-                        <div class="edu-image">
-                            <img src="assets/st_xaviers.jpg" alt="St. Xavier's High School">
-                        </div>
-                        <div class="edu-content">
-                            <h3>St. Xavier's High School</h3>
-                            <div class="edu-details">
-                                <p><strong>Location:</strong> Belgaum, Karnataka</p>
-                                <p><strong>Duration:</strong> 2015 - 2018</p>
-                                <p><strong>Board:</strong> State Board</p>
-                            </div>
-                            <div class="edu-learned">
-                                <h4>What I Learned:</h4>
-                                <ul>
-                                    <li>Strong foundation in Science and Mathematics</li>
-                                    <li>Basic computer literacy and programming concepts</li>
-                                    <li>Problem-solving and analytical thinking skills</li>
-                                    <li>Participated in science exhibitions and coding competitions</li>
-                                </ul>
-                            </div>
-                            <a href="#" class="marks-btn">10th Marks Card</a>
-                        </div>
-                    </div>
-
-                    <!-- Diploma -->
-                    <div class="education-card">
-                        <div class="edu-image">
-                            <img src="assets/polytechnic.jpg" alt="KLS's Shri Vasantrao Potdar Polytechnic">
-                        </div>
-                        <div class="edu-content">
-                            <h3>KLS's Shri Vasantrao Potdar Polytechnic</h3>
-                            <div class="edu-details">
-                                <p><strong>Diploma in Computer Science</strong></p>
-                                <p><strong>Location:</strong> Belgaum, Karnataka</p>
-                                <p><strong>Duration:</strong> 2018 - 2021</p>
-                                <p><strong>Percentage:</strong> 85%</p>
-                            </div>
-                            <div class="edu-learned">
-                                <h4>What I Learned:</h4>
-                                <ul>
-                                    <li>Programming fundamentals in C, C++, Java</li>
-                                    <li>Database management systems and SQL</li>
-                                    <li>Web development (HTML, CSS, JavaScript)</li>
-                                    <li>Software engineering principles</li>
-                                    <li>Computer networks and cybersecurity basics</li>
-                                    <li>Data structures and algorithms</li>
-                                </ul>
-                            </div>
-                            <a href="#" class="marks-btn">Diploma Marks Card (1st - 6th Sem)</a>
-                        </div>
-                    </div>
-
-                    <!-- Engineering -->
-                    <div class="education-card">
-                        <div class="edu-image">
-                            <img src="assets/jain_college.jpg" alt="Jain College of Engineering and Research">
-                        </div>
-                        <div class="edu-content">
-                            <h3>Jain College of Engineering and Research</h3>
-                            <div class="edu-details">
-                                <p><strong>Bachelor of Engineering in Computer Science</strong></p>
-                                <p><strong>Location:</strong> Belgaum, Karnataka</p>
-                                <p><strong>Duration:</strong> 2021 - 2024 (Lateral Entry)</p>
-                                <p><strong>Current CGPA:</strong> 8.5</p>
-                            </div>
-                            <div class="edu-learned">
-                                <h4>Currently Learning:</h4>
-                                <ul>
-                                    <li>Advanced Python programming and frameworks</li>
-                                    <li>Machine Learning algorithms and applications</li>
-                                    <li>Artificial Intelligence concepts</li>
-                                    <li>Deep Learning and Neural Networks</li>
-                                    <li>Data Science and analytics</li>
-                                    <li>Cloud computing and deployment</li>
-                                    <li>Full-stack web development</li>
-                                </ul>
-                            </div>
-                            <a href="#" class="marks-btn">Engineering Marks Card (3rd - 8th Sem)</a>
-                        </div>
-                    </div>
+            </div>
+            <!-- Mobile Menu -->
+            <div class="md:hidden hidden bg-gray-900" id="mobile-menu">
+                <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+                    <button onclick="router('home')" class="block w-full text-left hover:text-indigo-400 px-3 py-2 rounded-md text-base font-medium">Home</button>
+                    <button onclick="router('education')" class="block w-full text-left hover:text-indigo-400 px-3 py-2 rounded-md text-base font-medium">Education</button>
+                    <button onclick="router('projects')" class="block w-full text-left hover:text-indigo-400 px-3 py-2 rounded-md text-base font-medium">Projects</button>
+                    <button onclick="router('hackathons')" class="block w-full text-left hover:text-indigo-400 px-3 py-2 rounded-md text-base font-medium">Hackathons</button>
+                    <button onclick="router('certificates')" class="block w-full text-left hover:text-indigo-400 px-3 py-2 rounded-md text-base font-medium">Certificates</button>
+                    <button onclick="router('about')" class="block w-full text-left hover:text-indigo-400 px-3 py-2 rounded-md text-base font-medium">About Me</button>
+                    <button onclick="router('admin')" class="block w-full text-left text-red-400 hover:text-red-300 px-3 py-2 rounded-md text-base font-medium">Admin Panel</button>
                 </div>
-            </section>
-        </div>
-    </main>
+            </div>
+        </nav>
 
-    <!-- Footer -->
-    <footer>
-        <div class="social-links">
-            <a href="https://instagram.com/kswayammmm" target="_blank" title="Instagram">
-                <i class="fab fa-instagram"></i>
-            </a>
-            <a href="https://linkedin.com/in/swayam-khangaonkar" target="_blank" title="LinkedIn">
-                <i class="fab fa-linkedin-in"></i>
-            </a>
-            <a href="https://x.com/yourusername" target="_blank" title="X">
-                <i class="fab fa-twitter"></i>
-            </a>
-            <a href="https://wa.me/yournumber" target="_blank" title="WhatsApp">
-                <i class="fab fa-whatsapp"></i>
-            </a>
-        </div>
-        <p>&copy; 2024 Swayam Khangaonkar. All rights reserved.</p>
-    </footer>
-
-    <!-- Three.js CDN -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script>
-        // Check if animation has been shown in this session
-        if (!sessionStorage.getItem('animationShown')) {
-            sessionStorage.setItem('animationShown', 'true');
+        <!-- Content Container -->
+        <main class="pt-16 min-h-screen">
             
-            class VRAnimation {
-                constructor() {
-                    this.progress = 0;
-                    this.loadingInterval = null;
-                    this.init();
-                }
+            <!-- HOME SECTION -->
+            <section id="home-view" class="view-section min-h-screen flex items-center justify-center relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-full h-full overflow-hidden -z-10 opacity-20">
+                    <div class="absolute top-10 left-10 w-72 h-72 bg-purple-600 rounded-full mix-blend-multiply filter blur-xl animate-blob"></div>
+                    <div class="absolute top-10 right-10 w-72 h-72 bg-indigo-600 rounded-full mix-blend-multiply filter blur-xl animate-blob animation-delay-2000"></div>
+                    <div class="absolute -bottom-8 left-20 w-72 h-72 bg-pink-600 rounded-full mix-blend-multiply filter blur-xl animate-blob animation-delay-4000"></div>
+                </div>
+                <div class="text-center px-4 z-10">
+                    <h1 class="text-6xl md:text-8xl font-extrabold tracking-tight mb-4">
+                        Hi. I'm <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-600">Swayam Khangaonkar</span>
+                    </h1>
+                    <p class="text-xl md:text-2xl text-gray-300 mb-8 font-light animate-pulse">Welcome to my portfolio website</p>
+                    <div class="flex flex-col md:flex-row gap-4 justify-center">
+                        <button onclick="router('projects')" class="px-8 py-3 bg-indigo-600 hover:bg-indigo-700 rounded-full font-bold transition transform hover:scale-105 shadow-lg shadow-indigo-500/50">
+                            View My Work
+                        </button>
+                        <button onclick="downloadResume()" class="px-8 py-3 bg-green-600 hover:bg-green-700 rounded-full font-bold transition transform hover:scale-105 shadow-lg shadow-green-500/50">
+                            <i class="fas fa-download mr-2"></i> Download Resume
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- EDUCATION SECTION -->
+            <section id="education-view" class="view-section hidden max-w-7xl mx-auto px-4 py-12">
+                <div class="flex justify-between items-center mb-8">
+                    <h2 class="text-4xl font-bold border-l-4 border-indigo-500 pl-4">Education</h2>
+                    <button id="add-education-btn" onclick="openEditor('education')" class="hidden bg-green-600 hover:bg-green-700 px-4 py-2 rounded shadow"><i class="fas fa-plus"></i> Add</button>
+                </div>
                 
-                init() {
-                    this.createParticles();
-                    this.startLoadingAnimation();
+                <div id="education-list" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Dynamic Content -->
+                    <div class="glass p-6 rounded-xl hover:bg-gray-800 transition cursor-pointer relative group" onclick="showDetails('education', '1')">
+                        <h3 class="text-xl font-bold text-indigo-400">Bachelor of Technology in Computer Science</h3>
+                        <p class="text-lg font-semibold">XYZ University</p>
+                        <p class="text-gray-400 text-sm mb-2">2020 - 2024</p>
+                        <p class="text-gray-300 line-clamp-2">Completed my undergraduate degree with a focus on software development, algorithms, and data structures. Participated in various coding competitions and tech fests.</p>
+                        <p class="mt-2 text-xs text-indigo-300">Click for details & photos</p>
+                    </div>
                     
-                    // Auto-remove after 6 seconds
+                    <div class="glass p-6 rounded-xl hover:bg-gray-800 transition cursor-pointer relative group" onclick="showDetails('education', '2')">
+                        <h3 class="text-xl font-bold text-indigo-400">Higher Secondary Education</h3>
+                        <p class="text-lg font-semibold">ABC Junior College</p>
+                        <p class="text-gray-400 text-sm mb-2">2018 - 2020</p>
+                        <p class="text-gray-300 line-clamp-2">Completed my 12th grade with science stream, focusing on Physics, Chemistry, and Mathematics. Was an active member of the computer club.</p>
+                        <p class="mt-2 text-xs text-indigo-300">Click for details & photos</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- PROJECTS SECTION -->
+            <section id="projects-view" class="view-section hidden max-w-7xl mx-auto px-4 py-12">
+                <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+                    <h2 class="text-4xl font-bold border-l-4 border-indigo-500 pl-4">Projects</h2>
+                    <div class="flex gap-2 w-full md:w-auto">
+                        <div class="relative flex-grow md:flex-grow-0">
+                            <input type="text" id="search-projects" placeholder="Search projects..." class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 focus:outline-none focus:border-indigo-500">
+                            <i class="fas fa-search absolute right-3 top-3 text-gray-500"></i>
+                        </div>
+                        <button onclick="toggleFilter('project-filter-modal')" class="bg-gray-800 px-4 py-2 rounded-lg hover:bg-gray-700"><i class="fas fa-filter"></i></button>
+                        <button id="add-project-btn" onclick="openEditor('projects')" class="hidden bg-green-600 hover:bg-green-700 px-4 py-2 rounded shadow"><i class="fas fa-plus"></i></button>
+                    </div>
+                </div>
+
+                <div id="projects-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Dynamic Content -->
+                    <div class="glass p-6 rounded-xl hover:transform hover:-translate-y-1 transition relative">
+                        <h3 class="text-xl font-bold text-white mb-2">E-Commerce Platform</h3>
+                        <div class="flex gap-2 mb-3">
+                            <span class="text-xs bg-indigo-900 px-2 py-1 rounded text-indigo-200">Web Development</span>
+                            <span class="text-xs bg-indigo-900 px-2 py-1 rounded text-indigo-200">React</span>
+                            <span class="text-xs bg-indigo-900 px-2 py-1 rounded text-indigo-200">Node.js</span>
+                        </div>
+                        <p class="text-gray-400 text-sm mb-4 line-clamp-3">A full-stack e-commerce solution with user authentication, product catalog, shopping cart, and payment integration.</p>
+                        <button onclick="showDetails('projects', '1')" class="text-indigo-400 hover:text-white text-sm font-bold">View Details <i class="fas fa-arrow-right"></i></button>
+                    </div>
+                    
+                    <div class="glass p-6 rounded-xl hover:transform hover:-translate-y-1 transition relative">
+                        <h3 class="text-xl font-bold text-white mb-2">AI Chatbot</h3>
+                        <div class="flex gap-2 mb-3">
+                            <span class="text-xs bg-indigo-900 px-2 py-1 rounded text-indigo-200">AI</span>
+                            <span class="text-xs bg-indigo-900 px-2 py-1 rounded text-indigo-200">Python</span>
+                            <span class="text-xs bg-indigo-900 px-2 py-1 rounded text-indigo-200">NLP</span>
+                        </div>
+                        <p class="text-gray-400 text-sm mb-4 line-clamp-3">An intelligent chatbot using natural language processing to answer customer queries and provide support.</p>
+                        <button onclick="showDetails('projects', '2')" class="text-indigo-400 hover:text-white text-sm font-bold">View Details <i class="fas fa-arrow-right"></i></button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- HACKATHONS SECTION -->
+            <section id="hackathons-view" class="view-section hidden max-w-7xl mx-auto px-4 py-12">
+                <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+                    <h2 class="text-4xl font-bold border-l-4 border-indigo-500 pl-4">Hackathons</h2>
+                    <div class="flex gap-2 w-full md:w-auto">
+                        <div class="relative flex-grow md:flex-grow-0">
+                            <input type="text" id="search-hackathons" placeholder="Search hackathons..." class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 focus:outline-none focus:border-indigo-500">
+                            <i class="fas fa-search absolute right-3 top-3 text-gray-500"></i>
+                        </div>
+                        <button onclick="toggleFilter('hackathon-filter-modal')" class="bg-gray-800 px-4 py-2 rounded-lg hover:bg-gray-700"><i class="fas fa-filter"></i></button>
+                        <button id="add-hackathon-btn" onclick="openEditor('hackathons')" class="hidden bg-green-600 hover:bg-green-700 px-4 py-2 rounded shadow"><i class="fas fa-plus"></i></button>
+                    </div>
+                </div>
+
+                <div id="hackathons-list" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Dynamic Content -->
+                    <div class="glass p-6 rounded-xl relative">
+                        <div class="flex justify-between items-start mb-2">
+                            <h3 class="text-xl font-bold">Tech Innovation Hackathon 2023</h3>
+                            <span class="text-xs border border-gray-600 px-2 py-1 rounded uppercase">Offline</span>
+                        </div>
+                        <div class="mb-3 text-sm"><span class="text-yellow-400"><i class="fas fa-map-marker-alt"></i> ABC University</span></div>
+                        <p class="text-gray-400 text-sm mb-3">Developed a blockchain-based solution for secure digital voting system.</p>
+                        <a href="#" target="_blank" class="text-indigo-400 text-sm hover:underline">Host Link <i class="fas fa-external-link-alt"></i></a>
+                    </div>
+                    
+                    <div class="glass p-6 rounded-xl relative">
+                        <div class="flex justify-between items-start mb-2">
+                            <h3 class="text-xl font-bold">AI for Good Hackathon</h3>
+                            <span class="text-xs border border-gray-600 px-2 py-1 rounded uppercase">Online</span>
+                        </div>
+                        <div class="mb-3 text-sm"><span class="text-green-400"><i class="fas fa-globe"></i> Online</span></div>
+                        <p class="text-gray-400 text-sm mb-3">Created an AI model to detect early signs of plant diseases from images.</p>
+                        <a href="#" target="_blank" class="text-indigo-400 text-sm hover:underline">Host Link <i class="fas fa-external-link-alt"></i></a>
+                    </div>
+                </div>
+            </section>
+
+            <!-- CERTIFICATES SECTION -->
+            <section id="certificates-view" class="view-section hidden max-w-7xl mx-auto px-4 py-12">
+                <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+                    <h2 class="text-4xl font-bold border-l-4 border-indigo-500 pl-4">Certificates</h2>
+                    <div class="flex gap-2 w-full md:w-auto">
+                         <div class="relative flex-grow md:flex-grow-0">
+                            <input type="text" id="search-certificates" placeholder="Search..." class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 focus:outline-none focus:border-indigo-500">
+                            <i class="fas fa-search absolute right-3 top-3 text-gray-500"></i>
+                        </div>
+                        <button id="add-certificate-btn" onclick="openEditor('certificates')" class="hidden bg-green-600 hover:bg-green-700 px-4 py-2 rounded shadow"><i class="fas fa-plus"></i></button>
+                    </div>
+                </div>
+                <div id="certificates-list" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                    <!-- Dynamic Content -->
+                    <div class="glass p-4 rounded-xl relative hover:bg-gray-800 transition">
+                        <div class="h-32 bg-gray-800 rounded mb-3 overflow-hidden">
+                            <div class="w-full h-full flex items-center justify-center text-gray-600"><i class="fas fa-certificate fa-2x"></i></div>
+                        </div>
+                        <h4 class="font-bold text-white truncate">Full Stack Web Development</h4>
+                        <p class="text-xs text-gray-400">Coding Academy</p>
+                    </div>
+                    
+                    <div class="glass p-4 rounded-xl relative hover:bg-gray-800 transition">
+                        <div class="h-32 bg-gray-800 rounded mb-3 overflow-hidden">
+                            <div class="w-full h-full flex items-center justify-center text-gray-600"><i class="fas fa-certificate fa-2x"></i></div>
+                        </div>
+                        <h4 class="font-bold text-white truncate">Machine Learning Specialization</h4>
+                        <p class="text-xs text-gray-400">AI Institute</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ABOUT ME SECTION -->
+            <section id="about-view" class="view-section hidden max-w-7xl mx-auto px-4 py-12">
+                <div class="flex justify-between items-center mb-8">
+                    <h2 class="text-4xl font-bold border-l-4 border-indigo-500 pl-4">About Me</h2>
+                    <button id="edit-about-btn" onclick="openEditor('about')" class="hidden bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded shadow"><i class="fas fa-edit"></i> Edit</button>
+                </div>
+                <div class="glass rounded-2xl p-8 md:p-12 flex flex-col md:flex-row items-center gap-12">
+                    <div class="w-full md:w-1/3 flex justify-center">
+                        <div class="relative w-64 h-64 rounded-full overflow-hidden border-4 border-indigo-500 shadow-2xl">
+                            <img id="about-img" src="https://via.placeholder.com/300" alt="Swayam Khangaonkar" class="w-full h-full object-cover">
+                        </div>
+                    </div>
+                    <div class="w-full md:w-2/3">
+                        <h3 class="text-2xl font-bold mb-4 text-indigo-400">Swayam Khangaonkar</h3>
+                        <p id="about-text" class="text-gray-300 leading-relaxed text-lg whitespace-pre-line">
+                            I'm a passionate developer and problem solver with a keen interest in creating innovative solutions. With a strong foundation in computer science and hands-on experience in various projects, I'm always eager to learn new technologies and take on challenging tasks.
+
+                            My journey in technology started during my school days, and since then, I've been constantly exploring different domains like web development, artificial intelligence, and blockchain.
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ADMIN LOGIN & DASHBOARD -->
+            <section id="admin-view" class="view-section hidden max-w-7xl mx-auto px-4 py-12">
+                <!-- Login Form -->
+                <div id="login-form" class="max-w-md mx-auto glass p-8 rounded-xl shadow-2xl mt-20">
+                    <h2 class="text-2xl font-bold mb-6 text-center">Admin Login</h2>
+                    <input type="text" id="admin-user" placeholder="Username" class="w-full bg-gray-900 border border-gray-700 p-3 rounded mb-4 focus:border-indigo-500 outline-none">
+                    <input type="password" id="admin-pass" placeholder="Password" class="w-full bg-gray-900 border border-gray-700 p-3 rounded mb-6 focus:border-indigo-500 outline-none">
+                    <button onclick="adminLogin()" class="w-full bg-indigo-600 hover:bg-indigo-700 py-3 rounded font-bold transition">Login</button>
+                </div>
+
+                <!-- Admin Dashboard (Hidden by default) -->
+                <div id="admin-dashboard" class="hidden">
+                    <div class="flex justify-between items-center mb-8">
+                        <h2 class="text-3xl font-bold">Admin Dashboard</h2>
+                        <button onclick="adminLogout()" class="bg-red-600 px-4 py-2 rounded hover:bg-red-700">Logout</button>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div class="glass p-6 rounded-xl">
+                            <h3 class="text-xl font-bold mb-4 text-indigo-400">Visitor Tracker</h3>
+                            <div class="overflow-y-auto h-96">
+                                <table class="w-full text-sm text-left">
+                                    <thead class="text-gray-400 uppercase border-b border-gray-700">
+                                        <tr>
+                                            <th class="py-3">Time</th>
+                                            <th class="py-3">Device info</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="visitor-log-body" class="text-gray-300">
+                                        <!-- Logs will be added here -->
+                                        <tr class="border-b border-gray-800">
+                                            <td class="py-2">Just now</td>
+                                            <td class="py-2 text-xs truncate max-w-xs">Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="glass p-6 rounded-xl">
+                            <h3 class="text-xl font-bold mb-4 text-indigo-400">Quick Actions</h3>
+                            <p class="text-gray-400 mb-4">Navigate to sections to Add, Edit, or Delete content.</p>
+                            <div class="grid grid-cols-2 gap-4">
+                                <button onclick="router('education')" class="p-4 bg-gray-800 rounded hover:bg-gray-700">Manage Education</button>
+                                <button onclick="router('projects')" class="p-4 bg-gray-800 rounded hover:bg-gray-700">Manage Projects</button>
+                                <button onclick="router('hackathons')" class="p-4 bg-gray-800 rounded hover:bg-gray-700">Manage Hackathons</button>
+                                <button onclick="router('about')" class="p-4 bg-gray-800 rounded hover:bg-gray-700">Edit About Me</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- FOOTER -->
+            <footer class="bg-black py-12 border-t border-gray-800 mt-12">
+                <div class="max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div>
+                        <h3 class="text-xl font-bold mb-4 text-white">Quick Links</h3>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button onclick="router('home')" class="text-left text-gray-400 hover:text-white transition">Home</button>
+                            <button onclick="router('education')" class="text-left text-gray-400 hover:text-white transition">Education</button>
+                            <button onclick="router('projects')" class="text-left text-gray-400 hover:text-white transition">Projects</button>
+                            <button onclick="router('hackathons')" class="text-left text-gray-400 hover:text-white transition">Hackathons</button>
+                            <button onclick="router('certificates')" class="text-left text-gray-400 hover:text-white transition">Certificates</button>
+                            <button onclick="router('about')" class="text-left text-gray-400 hover:text-white transition">About Me</button>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold mb-4 text-white">Connect with me</h3>
+                        <div class="flex space-x-6">
+                            <a href="https://instagram.com/kswayammmm" target="_blank" class="text-3xl text-gray-400 hover:text-pink-500 transition transform hover:scale-110"><i class="fab fa-instagram"></i></a>
+                            <a href="https://www.linkedin.com/in/swayam-khangaonkar-227bab345" target="_blank" class="text-3xl text-gray-400 hover:text-blue-500 transition transform hover:scale-110"><i class="fab fa-linkedin"></i></a>
+                            <a href="https://x.com" target="_blank" class="text-3xl text-gray-400 hover:text-white transition transform hover:scale-110"><i class="fab fa-twitter"></i></a> <!-- Using twitter icon for X -->
+                            <span class="text-3xl text-gray-400 hover:text-green-500 transition transform hover:scale-110 cursor-pointer"><i class="fab fa-whatsapp"></i></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="text-center mt-12 text-gray-600 text-sm">
+                    &copy; 2025 Swayam Khangaonkar. All Rights Reserved.
+                </div>
+            </footer>
+
+        </main>
+
+        <!-- MODALS -->
+        
+        <!-- Filter Modal (Projects) -->
+        <div id="project-filter-modal" class="fixed inset-0 bg-black bg-opacity-90 hidden z-50 flex items-center justify-center">
+            <div class="bg-gray-900 p-6 rounded-xl w-80 border border-gray-700">
+                <h3 class="text-xl font-bold mb-4">Filter Projects</h3>
+                <div class="space-y-2">
+                    <label class="flex items-center space-x-2"><input type="checkbox" class="form-checkbox" value="AI" onchange="applyProjectFilter()"> <span>AI / ML</span></label>
+                    <label class="flex items-center space-x-2"><input type="checkbox" class="form-checkbox" value="Blockchain" onchange="applyProjectFilter()"> <span>Blockchain</span></label>
+                    <label class="flex items-center space-x-2"><input type="checkbox" class="form-checkbox" value="Web" onchange="applyProjectFilter()"> <span>Web Dev</span></label>
+                </div>
+                <button onclick="toggleFilter('project-filter-modal')" class="mt-6 w-full bg-gray-700 py-2 rounded">Close</button>
+            </div>
+        </div>
+
+        <!-- Filter Modal (Hackathons) -->
+        <div id="hackathon-filter-modal" class="fixed inset-0 bg-black bg-opacity-90 hidden z-50 flex items-center justify-center">
+            <div class="bg-gray-900 p-6 rounded-xl w-80 border border-gray-700">
+                <h3 class="text-xl font-bold mb-4">Filter Hackathons</h3>
+                <div class="space-y-2">
+                    <label class="flex items-center space-x-2"><input type="radio" name="h-mode" value="all" checked onchange="applyHackathonFilter()"> <span>All</span></label>
+                    <label class="flex items-center space-x-2"><input type="radio" name="h-mode" value="online" onchange="applyHackathonFilter()"> <span>Online</span></label>
+                    <label class="flex items-center space-x-2"><input type="radio" name="h-mode" value="offline" onchange="applyHackathonFilter()"> <span>Offline</span></label>
+                </div>
+                <button onclick="toggleFilter('hackathon-filter-modal')" class="mt-6 w-full bg-gray-700 py-2 rounded">Close</button>
+            </div>
+        </div>
+
+        <!-- Generic Editor Modal (Add/Edit) -->
+        <div id="editor-modal" class="fixed inset-0 z-[60] hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+            <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                <div class="fixed inset-0 bg-gray-900 bg-opacity-95 transition-opacity" onclick="closeEditor()"></div>
+                <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+                <div class="inline-block align-bottom bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg w-full">
+                    <div class="px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                        <h3 class="text-lg leading-6 font-medium text-white mb-4" id="editor-title">Edit Item</h3>
+                        <form id="editor-form" class="space-y-4">
+                            <!-- Dynamic Form Fields injected here -->
+                        </form>
+                    </div>
+                    <div class="bg-gray-700 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                        <button type="button" id="save-btn" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm">Save</button>
+                        <button type="button" onclick="closeEditor()" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-500 shadow-sm px-4 py-2 bg-gray-800 text-base font-medium text-gray-300 hover:text-white hover:bg-gray-700 focus:outline-none sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detail Pop-up Modal (Education/Projects) -->
+        <div id="detail-modal" class="fixed inset-0 z-[70] hidden overflow-y-auto">
+            <div class="flex items-center justify-center min-h-screen px-4 text-center">
+                <div class="fixed inset-0 bg-black bg-opacity-95 transition-opacity" onclick="closeDetail()"></div>
+                <div class="relative inline-block bg-gray-900 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:max-w-4xl w-full border border-gray-700">
+                    <div class="p-6" id="detail-content">
+                        <!-- Content Injected via JS -->
+                    </div>
+                    <button onclick="closeDetail()" class="absolute top-4 right-4 text-gray-400 hover:text-white text-2xl">&times;</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // Admin credentials
+        const ADMIN_USERNAME = "admin";
+        const ADMIN_PASSWORD = "admin123";
+        
+        let isAdmin = false;
+        let collectionData = {
+            education: [
+                {
+                    id: "1",
+                    school: "XYZ University",
+                    degree: "Bachelor of Technology in Computer Science",
+                    year: "2020 - 2024",
+                    description: "Completed my undergraduate degree with a focus on software development, algorithms, and data structures. Participated in various coding competitions and tech fests.",
+                    photos: [
+                        "https://via.placeholder.com/300x200/6c63ff/ffffff?text=University+1",
+                        "https://via.placeholder.com/300x200/4a44c9/ffffff?text=University+2",
+                        "https://via.placeholder.com/300x200/ff6584/ffffff?text=University+3"
+                    ]
+                },
+                {
+                    id: "2",
+                    school: "ABC Junior College",
+                    degree: "Higher Secondary Education",
+                    year: "2018 - 2020",
+                    description: "Completed my 12th grade with science stream, focusing on Physics, Chemistry, and Mathematics. Was an active member of the computer club.",
+                    photos: [
+                        "https://via.placeholder.com/300x200/6c63ff/ffffff?text=College+1",
+                        "https://via.placeholder.com/300x200/4a44c9/ffffff?text=College+2"
+                    ]
+                }
+            ],
+            projects: [
+                {
+                    id: "1",
+                    title: "E-Commerce Platform",
+                    description: "A full-stack e-commerce solution with user authentication, product catalog, shopping cart, and payment integration.",
+                    tags: "Web Development, React, Node.js, MongoDB",
+                    link: "#"
+                },
+                {
+                    id: "2",
+                    title: "AI Chatbot",
+                    description: "An intelligent chatbot using natural language processing to answer customer queries and provide support.",
+                    tags: "AI, Python, NLP, Machine Learning",
+                    link: "#"
+                }
+            ],
+            hackathons: [
+                {
+                    id: "1",
+                    name: "Tech Innovation Hackathon 2023",
+                    description: "Developed a blockchain-based solution for secure digital voting system.",
+                    hostLink: "#",
+                    mode: "offline",
+                    location: "ABC University"
+                },
+                {
+                    id: "2",
+                    name: "AI for Good Hackathon",
+                    description: "Created an AI model to detect early signs of plant diseases from images.",
+                    hostLink: "#",
+                    mode: "online",
+                    location: "Online"
+                }
+            ],
+            certificates: [
+                {
+                    id: "1",
+                    title: "Full Stack Web Development",
+                    issuer: "Coding Academy",
+                    imageUrl: ""
+                },
+                {
+                    id: "2",
+                    title: "Machine Learning Specialization",
+                    issuer: "AI Institute",
+                    imageUrl: ""
+                }
+            ]
+        };
+
+        // --- ANIMATION LOGIC ---
+        function startAnimation() {
+            let progress = 0;
+            const progressBar = document.getElementById('progress-bar');
+            const loadingScreen = document.getElementById('loading-screen');
+            const appDiv = document.getElementById('app');
+            const whiteScreen = document.getElementById('white-screen');
+            const rocket = document.querySelector('.rocket');
+            const flames = document.querySelector('.flames');
+
+            // Start Progress Bar (5 seconds)
+            const interval = setInterval(() => {
+                progress += 1;
+                progressBar.style.width = `${progress}%`;
+                
+                if (progress === 100) {
+                    clearInterval(interval);
+                    // Launch rocket
+                    rocket.style.animation = 'rocket-launch 2s forwards';
+                    flames.style.animation = 'flames-grow 2s forwards';
+                    
+                    // Show white screen after rocket launch
                     setTimeout(() => {
-                        this.fadeOut();
-                    }, 6000);
+                        whiteScreen.style.opacity = '1';
+                        setTimeout(() => {
+                            loadingScreen.style.opacity = '0';
+                            setTimeout(() => {
+                                loadingScreen.style.display = 'none';
+                                appDiv.classList.remove('hidden');
+                                whiteScreen.style.opacity = '0';
+                                setTimeout(() => whiteScreen.style.display = 'none', 200);
+                            }, 1000);
+                        }, 2000); // White screen for 2 seconds
+                    }, 2000); // Time for rocket to fly up
                 }
-                
-                createParticles() {
-                    const canvas = document.getElementById('particles-canvas');
-                    const scene = new THREE.Scene();
-                    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-                    const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
-                    
-                    renderer.setSize(window.innerWidth, window.innerHeight);
-                    canvas.appendChild(renderer.domElement);
-                    
-                    // Create particles
-                    const particlesGeometry = new THREE.BufferGeometry();
-                    const particlesCount = 150;
-                    
-                    const posArray = new Float32Array(particlesCount * 3);
-                    const colorArray = new Float32Array(particlesCount * 3);
-                    const sizeArray = new Float32Array(particlesCount);
-                    
-                    for(let i = 0; i < particlesCount * 3; i++) {
-                        posArray[i] = (Math.random() - 0.5) * 10;
-                        colorArray[i] = Math.random() * 0.5 + 0.5;
-                        sizeArray[i/3] = Math.random() * 0.1 + 0.05;
-                    }
-                    
-                    particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
-                    particlesGeometry.setAttribute('color', new THREE.BufferAttribute(colorArray, 3));
-                    particlesGeometry.setAttribute('size', new THREE.BufferAttribute(sizeArray, 1));
-                    
-                    const particlesMaterial = new THREE.PointsMaterial({
-                        size: 0.05,
-                        vertexColors: true,
-                        transparent: true,
-                        opacity: 0.6
-                    });
-                    
-                    const particlesMesh = new THREE.Points(particlesGeometry, particlesMaterial);
-                    scene.add(particlesMesh);
-                    
-                    camera.position.z = 5;
-                    
-                    // Animation
-                    const clock = new THREE.Clock();
-                    
-                    function animate() {
-                        requestAnimationFrame(animate);
-                        
-                        const elapsedTime = clock.getElapsedTime();
-                        
-                        particlesMesh.rotation.x = elapsedTime * 0.1;
-                        particlesMesh.rotation.y = elapsedTime * 0.2;
-                        
-                        // Move particles in wave pattern
-                        const positions = particlesGeometry.attributes.position.array;
-                        for (let i = 0; i < positions.length; i += 3) {
-                            positions[i] += Math.sin(elapsedTime + positions[i]) * 0.01;
-                            positions[i + 1] += Math.cos(elapsedTime + positions[i + 1]) * 0.01;
-                        }
-                        particlesGeometry.attributes.position.needsUpdate = true;
-                        
-                        renderer.render(scene, camera);
-                    }
-                    
-                    animate();
-                    
-                    // Handle resize
-                    window.addEventListener('resize', () => {
-                        camera.aspect = window.innerWidth / window.innerHeight;
-                        camera.updateProjectionMatrix();
-                        renderer.setSize(window.innerWidth, window.innerHeight);
-                    });
+            }, 50); // 5 seconds total (100% in 5000ms)
+        }
+
+        // --- ROUTING ---
+        function router(viewId) {
+            // Hide all views
+            document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
+            // Close mobile menu
+            document.getElementById('mobile-menu').classList.add('hidden');
+            
+            if (viewId === 'admin') {
+                document.getElementById('admin-view').classList.remove('hidden');
+                if (isAdmin) {
+                    document.getElementById('login-form').classList.add('hidden');
+                    document.getElementById('admin-dashboard').classList.remove('hidden');
+                } else {
+                    document.getElementById('login-form').classList.remove('hidden');
+                    document.getElementById('admin-dashboard').classList.add('hidden');
                 }
-                
-                startLoadingAnimation() {
-                    const progressBar = document.getElementById('loading-progress');
-                    const progressText = document.getElementById('loading-text');
-                    
-                    this.loadingInterval = setInterval(() => {
-                        this.progress += 1;
-                        progressBar.style.width = `${this.progress}%`;
-                        progressText.textContent = `${this.progress}%`;
-                        
-                        if (this.progress >= 100) {
-                            clearInterval(this.loadingInterval);
-                        }
-                    }, 50); // 50ms * 100 = 5 seconds for loading
-                }
-                
-                fadeOut() {
-                    const container = document.getElementById('animation-container');
-                    container.classList.add('hidden');
-                    setTimeout(() => {
-                        container.style.display = 'none';
-                    }, 1000);
-                }
+            } else {
+                document.getElementById(`${viewId}-view`).classList.remove('hidden');
+            }
+            window.scrollTo(0,0);
+        }
+
+        function toggleMobileMenu() {
+            document.getElementById('mobile-menu').classList.toggle('hidden');
+        }
+
+        // --- ADMIN ACTIONS ---
+        function adminLogin() {
+            const u = document.getElementById('admin-user').value;
+            const p = document.getElementById('admin-pass').value;
+            
+            if (u === ADMIN_USERNAME && p === ADMIN_PASSWORD) {
+                isAdmin = true;
+                document.getElementById('nav-admin-btn').classList.add('text-green-400');
+                router('admin');
+                enableAdminFeatures();
+                // Setup visitor listener if needed
+            } else {
+                alert('Invalid credentials');
+            }
+        }
+
+        function adminLogout() {
+            isAdmin = false;
+            document.getElementById('nav-admin-btn').classList.remove('text-green-400');
+            document.getElementById('admin-user').value = '';
+            document.getElementById('admin-pass').value = '';
+            router('home');
+            disableAdminFeatures();
+        }
+
+        function enableAdminFeatures() {
+            document.getElementById('add-education-btn').classList.remove('hidden');
+            document.getElementById('add-project-btn').classList.remove('hidden');
+            document.getElementById('add-hackathon-btn').classList.remove('hidden');
+            document.getElementById('add-certificate-btn').classList.remove('hidden');
+            document.getElementById('edit-about-btn').classList.remove('hidden');
+        }
+
+        function disableAdminFeatures() {
+            document.getElementById('add-education-btn').classList.add('hidden');
+            document.getElementById('add-project-btn').classList.add('hidden');
+            document.getElementById('add-hackathon-btn').classList.add('hidden');
+            document.getElementById('add-certificate-btn').classList.add('hidden');
+            document.getElementById('edit-about-btn').classList.add('hidden');
+        }
+
+        // --- EDITOR MODAL LOGIC ---
+        let currentEditType = null;
+        let currentEditId = null;
+
+        function openEditor(type, id = null) {
+            if (!isAdmin) return;
+            
+            currentEditType = type;
+            currentEditId = id;
+            
+            const modal = document.getElementById('editor-modal');
+            const form = document.getElementById('editor-form');
+            const title = document.getElementById('editor-title');
+            
+            title.innerText = id ? `Edit ${type}` : `Add New ${type}`;
+            form.innerHTML = ''; // Clear previous
+
+            let data = {};
+            if (id) {
+                data = collectionData[type].find(i => i.id === id) || {};
             }
 
-            // Initialize animation
-            document.addEventListener('DOMContentLoaded', () => {
-                new VRAnimation();
-            });
-        } else {
-            // Animation already shown, hide it immediately
-            document.getElementById('animation-container').style.display = 'none';
-            document.querySelector('main').style.opacity = '1';
-            document.querySelector('main').style.animation = 'none';
+            // Generate Fields based on type
+            if (type === 'education') {
+                form.innerHTML = `
+                    <input type="text" id="in-school" placeholder="School/College Name" value="${data.school||''}" class="w-full bg-gray-700 p-2 rounded text-white mb-2">
+                    <input type="text" id="in-degree" placeholder="Degree" value="${data.degree||''}" class="w-full bg-gray-700 p-2 rounded text-white mb-2">
+                    <input type="text" id="in-year" placeholder="Year (e.g., 2020-2024)" value="${data.year||''}" class="w-full bg-gray-700 p-2 rounded text-white mb-2">
+                    <textarea id="in-desc" placeholder="Description" class="w-full bg-gray-700 p-2 rounded text-white mb-2 h-24">${data.description||''}</textarea>
+                    <label class="text-sm text-gray-400">Photo URLs (Comma separated, up to 15)</label>
+                    <textarea id="in-photos" placeholder="https://..., https://..." class="w-full bg-gray-700 p-2 rounded text-white mb-2 h-24">${(data.photos||[]).join(', ')}</textarea>
+                `;
+            } else if (type === 'projects') {
+                form.innerHTML = `
+                    <input type="text" id="in-title" placeholder="Project Title" value="${data.title||''}" class="w-full bg-gray-700 p-2 rounded text-white mb-2">
+                    <textarea id="in-desc" placeholder="Project Details" class="w-full bg-gray-700 p-2 rounded text-white mb-2 h-32">${data.description||''}</textarea>
+                    <input type="text" id="in-tags" placeholder="Tags (AI, Blockchain, Web)" value="${data.tags||''}" class="w-full bg-gray-700 p-2 rounded text-white mb-2">
+                    <input type="text" id="in-link" placeholder="Project Link/Host" value="${data.link||''}" class="w-full bg-gray-700 p-2 rounded text-white mb-2">
+                `;
+            } else if (type === 'hackathons') {
+                const isOnline = data.mode === 'online';
+                form.innerHTML = `
+                    <input type="text" id="in-name" placeholder="Hackathon Name" value="${data.name||''}" class="w-full bg-gray-700 p-2 rounded text-white mb-2">
+                    <textarea id="in-desc" placeholder="Description" class="w-full bg-gray-700 p-2 rounded text-white mb-2 h-24">${data.description||''}</textarea>
+                    <input type="text" id="in-host" placeholder="Host Link" value="${data.hostLink||''}" class="w-full bg-gray-700 p-2 rounded text-white mb-2">
+                    <select id="in-mode" onchange="toggleLocInput()" class="w-full bg-gray-700 p-2 rounded text-white mb-2">
+                        <option value="offline" ${!isOnline?'selected':''}>Offline</option>
+                        <option value="online" ${isOnline?'selected':''}>Online</option>
+                    </select>
+                    <div id="loc-wrapper" class="${isOnline?'hidden':''}">
+                        <input type="text" id="in-loc" placeholder="College Name / Location" value="${data.location||''}" class="w-full bg-gray-700 p-2 rounded text-white mb-2">
+                    </div>
+                `;
+            } else if (type === 'certificates') {
+                form.innerHTML = `
+                    <input type="text" id="in-title" placeholder="Certificate Name" value="${data.title||''}" class="w-full bg-gray-700 p-2 rounded text-white mb-2">
+                    <input type="text" id="in-issuer" placeholder="Issuer" value="${data.issuer||''}" class="w-full bg-gray-700 p-2 rounded text-white mb-2">
+                    <input type="text" id="in-img" placeholder="Image URL" value="${data.imageUrl||''}" class="w-full bg-gray-700 p-2 rounded text-white mb-2">
+                `;
+            } else if (type === 'about') {
+                form.innerHTML = `
+                    <textarea id="in-text" placeholder="About Me Text" class="w-full bg-gray-700 p-2 rounded text-white mb-2 h-64">${document.getElementById('about-text').innerText}</textarea>
+                    <input type="text" id="in-photo" placeholder="Photo URL" value="${document.getElementById('about-img').src}" class="w-full bg-gray-700 p-2 rounded text-white mb-2">
+                `;
+            }
+
+            document.getElementById('save-btn').onclick = saveData;
+            modal.classList.remove('hidden');
         }
+
+        function toggleLocInput() {
+            const mode = document.getElementById('in-mode').value;
+            const wrapper = document.getElementById('loc-wrapper');
+            if (mode === 'online') wrapper.classList.add('hidden');
+            else wrapper.classList.remove('hidden');
+        }
+
+        function closeEditor() {
+            document.getElementById('editor-modal').classList.add('hidden');
+        }
+
+        function saveData() {
+            if (!isAdmin) return;
+            const type = currentEditType;
+            const id = currentEditId;
+            
+            let payload = {};
+
+            if (type === 'education') {
+                payload = {
+                    school: document.getElementById('in-school').value,
+                    degree: document.getElementById('in-degree').value,
+                    year: document.getElementById('in-year').value,
+                    description: document.getElementById('in-desc').value,
+                    photos: document.getElementById('in-photos').value.split(',').map(s=>s.trim()).filter(s=>s)
+                };
+            } else if (type === 'projects') {
+                payload = {
+                    title: document.getElementById('in-title').value,
+                    description: document.getElementById('in-desc').value,
+                    tags: document.getElementById('in-tags').value,
+                    link: document.getElementById('in-link').value
+                };
+            } else if (type === 'hackathons') {
+                const mode = document.getElementById('in-mode').value;
+                payload = {
+                    name: document.getElementById('in-name').value,
+                    description: document.getElementById('in-desc').value,
+                    hostLink: document.getElementById('in-host').value,
+                    mode: mode,
+                    location: mode === 'online' ? 'Online' : document.getElementById('in-loc').value
+                };
+            } else if (type === 'certificates') {
+                payload = {
+                    title: document.getElementById('in-title').value,
+                    issuer: document.getElementById('in-issuer').value,
+                    imageUrl: document.getElementById('in-img').value
+                };
+            } else if (type === 'about') {
+                payload = {
+                    text: document.getElementById('in-text').value,
+                    photoUrl: document.getElementById('in-photo').value
+                };
+                document.getElementById('about-text').innerText = payload.text;
+                document.getElementById('about-img').src = payload.photoUrl;
+                closeEditor();
+                return;
+            }
+
+            try {
+                if (id) {
+                    // Update existing item
+                    const index = collectionData[type].findIndex(i => i.id === id);
+                    if (index !== -1) {
+                        collectionData[type][index] = { ...collectionData[type][index], ...payload };
+                    }
+                } else {
+                    // Add new item
+                    const newId = Date.now().toString();
+                    collectionData[type].push({ id: newId, ...payload });
+                }
+                
+                renderCollection(type);
+                closeEditor();
+            } catch (e) {
+                console.error("Save Error", e);
+                alert("Error saving data.");
+            }
+        }
+
+        function deleteItem(type, id) {
+            if(!isAdmin || !confirm("Are you sure you want to delete this?")) return;
+            try {
+                collectionData[type] = collectionData[type].filter(item => item.id !== id);
+                renderCollection(type);
+            } catch (e) { console.error(e); }
+        }
+
+        // --- RENDERING ---
+        function renderCollection(type) {
+            const container = document.getElementById(`${type}-list`);
+            container.innerHTML = '';
+            let data = collectionData[type];
+
+            // Filtering
+            if (type === 'projects') data = filterProjects(data);
+            if (type === 'hackathons') data = filterHackathons(data);
+            if (type === 'certificates') data = searchFilter(data, 'search-certificates', ['title', 'issuer']);
+
+            data.forEach(item => {
+                let cardHTML = '';
+                const adminControls = isAdmin ? `
+                    <div class="absolute top-2 right-2 flex gap-2 z-10">
+                        <button onclick="openEditor('${type}', '${item.id}')" class="bg-blue-600 p-1 rounded text-xs text-white"><i class="fas fa-edit"></i></button>
+                        <button onclick="deleteItem('${type}', '${item.id}')" class="bg-red-600 p-1 rounded text-xs text-white"><i class="fas fa-trash"></i></button>
+                    </div>
+                ` : '';
+
+                if (type === 'education') {
+                    cardHTML = `
+                        <div class="glass p-6 rounded-xl hover:bg-gray-800 transition cursor-pointer relative group" onclick="showDetails('education', '${item.id}')">
+                            ${adminControls}
+                            <h3 class="text-xl font-bold text-indigo-400">${item.degree || 'Degree'}</h3>
+                            <p class="text-lg font-semibold">${item.school || 'Institution'}</p>
+                            <p class="text-gray-400 text-sm mb-2">${item.year || 'Year'}</p>
+                            <p class="text-gray-300 line-clamp-2">${item.description || ''}</p>
+                            <p class="mt-2 text-xs text-indigo-300">Click for details & photos</p>
+                        </div>
+                    `;
+                } else if (type === 'projects') {
+                    cardHTML = `
+                        <div class="glass p-6 rounded-xl hover:transform hover:-translate-y-1 transition relative">
+                            ${adminControls}
+                            <h3 class="text-xl font-bold text-white mb-2">${item.title || 'Project'}</h3>
+                            <div class="flex gap-2 mb-3">
+                                ${(item.tags || '').split(',').map(t => `<span class="text-xs bg-indigo-900 px-2 py-1 rounded text-indigo-200">${t.trim()}</span>`).join('')}
+                            </div>
+                            <p class="text-gray-400 text-sm mb-4 line-clamp-3">${item.description || ''}</p>
+                            <button onclick="showDetails('projects', '${item.id}')" class="text-indigo-400 hover:text-white text-sm font-bold">View Details <i class="fas fa-arrow-right"></i></button>
+                        </div>
+                    `;
+                } else if (type === 'hackathons') {
+                    const locationDisplay = item.mode === 'online' ? 
+                        '<span class="text-green-400"><i class="fas fa-globe"></i> Online</span>' : 
+                        `<span class="text-yellow-400"><i class="fas fa-map-marker-alt"></i> ${item.location || 'Collage'}</span>`;
+                    
+                    cardHTML = `
+                        <div class="glass p-6 rounded-xl relative">
+                            ${adminControls}
+                            <div class="flex justify-between items-start mb-2">
+                                <h3 class="text-xl font-bold">${item.name || 'Hackathon'}</h3>
+                                <span class="text-xs border border-gray-600 px-2 py-1 rounded uppercase">${item.mode || 'Offline'}</span>
+                            </div>
+                            <div class="mb-3 text-sm">${locationDisplay}</div>
+                            <p class="text-gray-400 text-sm mb-3">${item.description || ''}</p>
+                            ${item.hostLink ? `<a href="${item.hostLink}" target="_blank" class="text-indigo-400 text-sm hover:underline">Host Link <i class="fas fa-external-link-alt"></i></a>` : ''}
+                        </div>
+                    `;
+                } else if (type === 'certificates') {
+                     cardHTML = `
+                        <div class="glass p-4 rounded-xl relative hover:bg-gray-800 transition">
+                            ${adminControls}
+                            <div class="h-32 bg-gray-800 rounded mb-3 overflow-hidden">
+                                ${item.imageUrl ? `<img src="${item.imageUrl}" class="w-full h-full object-cover" onclick="window.open('${item.imageUrl}')">` : '<div class="w-full h-full flex items-center justify-center text-gray-600"><i class="fas fa-certificate fa-2x"></i></div>'}
+                            </div>
+                            <h4 class="font-bold text-white truncate">${item.title || 'Certificate'}</h4>
+                            <p class="text-xs text-gray-400">${item.issuer || 'Issuer'}</p>
+                        </div>
+                    `;
+                }
+
+                container.innerHTML += cardHTML;
+            });
+        }
+
+        // --- SEARCH & FILTER LOGIC ---
+        function filterProjects(data) {
+            const search = document.getElementById('search-projects').value.toLowerCase();
+            const checkboxes = document.querySelectorAll('#project-filter-modal input[type="checkbox"]:checked');
+            const selectedTags = Array.from(checkboxes).map(cb => cb.value.toLowerCase());
+
+            return data.filter(item => {
+                const matchesSearch = (item.title || '').toLowerCase().includes(search);
+                const itemTags = (item.tags || '').toLowerCase();
+                const matchesTags = selectedTags.length === 0 || selectedTags.some(tag => itemTags.includes(tag));
+                return matchesSearch && matchesTags;
+            });
+        }
+
+        function filterHackathons(data) {
+            const search = document.getElementById('search-hackathons').value.toLowerCase();
+            const mode = document.querySelector('input[name="h-mode"]:checked').value;
+
+            return data.filter(item => {
+                const matchesSearch = (item.name || '').toLowerCase().includes(search);
+                const matchesMode = mode === 'all' || (item.mode || 'offline').toLowerCase() === mode;
+                return matchesSearch && matchesMode;
+            });
+        }
+
+        function searchFilter(data, inputId, fields) {
+            const search = document.getElementById(inputId).value.toLowerCase();
+            return data.filter(item => {
+                return fields.some(field => (item[field] || '').toLowerCase().includes(search));
+            });
+        }
+
+        // Event Listeners for Search
+        document.getElementById('search-projects').addEventListener('input', () => renderCollection('projects'));
+        document.getElementById('search-hackathons').addEventListener('input', () => renderCollection('hackathons'));
+        document.getElementById('search-certificates').addEventListener('input', () => renderCollection('certificates'));
+
+        function toggleFilter(modalId) {
+            const el = document.getElementById(modalId);
+            el.classList.toggle('hidden');
+        }
+        
+        function applyProjectFilter() { renderCollection('projects'); }
+        function applyHackathonFilter() { renderCollection('hackathons'); }
+
+        // --- DETAIL POP-UP ---
+        function showDetails(type, id) {
+            const item = collectionData[type].find(i => i.id === id);
+            if (!item) return;
+
+            const content = document.getElementById('detail-content');
+            content.innerHTML = ''; // clear
+
+            if (type === 'education') {
+                const photosHtml = (item.photos || []).map(url => 
+                    `<img src="${url}" class="h-48 w-auto rounded-lg border border-gray-600 flex-shrink-0">`
+                ).join('');
+
+                content.innerHTML = `
+                    <h2 class="text-3xl font-bold text-indigo-400 mb-2">${item.school}</h2>
+                    <h3 class="text-xl text-white mb-4">${item.degree} (${item.year})</h3>
+                    <div class="prose prose-invert max-w-none mb-6">
+                        <p class="text-gray-300">${item.description}</p>
+                    </div>
+                    ${item.photos && item.photos.length > 0 ? `
+                        <h4 class="text-lg font-bold mb-2">Gallery</h4>
+                        <div class="flex gap-4 overflow-x-auto hide-scroll pb-2">
+                            ${photosHtml}
+                        </div>
+                    ` : ''}
+                `;
+            } else if (type === 'projects') {
+                 content.innerHTML = `
+                    <h2 class="text-3xl font-bold text-indigo-400 mb-2">${item.title}</h2>
+                    <div class="flex gap-2 mb-4">
+                        ${(item.tags || '').split(',').map(t => `<span class="px-2 py-1 bg-gray-700 rounded text-sm">${t}</span>`).join('')}
+                    </div>
+                    <div class="prose prose-invert max-w-none mb-6">
+                        <p class="text-gray-300 whitespace-pre-line">${item.description}</p>
+                    </div>
+                    ${item.link ? `<a href="${item.link}" target="_blank" class="bg-indigo-600 px-6 py-2 rounded font-bold inline-block hover:bg-indigo-700">Visit Project</a>` : ''}
+                `;
+            }
+
+            document.getElementById('detail-modal').classList.remove('hidden');
+        }
+
+        function closeDetail() {
+            document.getElementById('detail-modal').classList.add('hidden');
+        }
+
+        // Download Resume
+        function downloadResume() {
+            // Create a simple PDF file (in a real scenario, this would be a link to an actual PDF)
+            const link = document.createElement('a');
+            link.href = '#'; // Replace with actual resume URL
+            link.download = 'Swayam_Khangaonkar_Resume.pdf';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            alert('Resume download will start shortly. In a real implementation, this would download your actual resume.');
+        }
+
+        // Initialize the website
+        window.onload = function() {
+            startAnimation();
+            
+            // Set up search event listeners
+            document.getElementById('search-projects').addEventListener('input', () => renderCollection('projects'));
+            document.getElementById('search-hackathons').addEventListener('input', () => renderCollection('hackathons'));
+            document.getElementById('search-certificates').addEventListener('input', () => renderCollection('certificates'));
+            
+            // Render initial collections
+            renderCollection('education');
+            renderCollection('projects');
+            renderCollection('hackathons');
+            renderCollection('certificates');
+        };
     </script>
 </body>
 </html>
