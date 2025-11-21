@@ -606,12 +606,12 @@
 
         window.onload = function() {
             generateStars();
-            startAnimation();
+            startAnimation(); // Now runs exactly 5s logic
             loadData();
             logLocalVisit();
         };
 
-        // --- ANIMATION LOGIC ---
+        // --- ANIMATION LOGIC (TIME-BASED FIX) ---
         function generateStars() {
             const starfield = document.getElementById('starfield');
             for(let i=0; i<50; i++) {
@@ -629,7 +629,6 @@
         }
 
         function startAnimation() {
-            let percentage = 0;
             const percentageEl = document.getElementById('percentage');
             const loadingBar = document.getElementById('loading-bar');
             const statusText = document.getElementById('status-text');
@@ -638,13 +637,15 @@
             const whiteFlash = document.getElementById('white-flash');
             const rocket = document.querySelector('.rocket-container');
 
-            const duration = 5000; 
-            const interval = 50;
-            const step = 100 / (duration / interval);
+            const duration = 5000; // Exactly 5000ms
+            const startTime = Date.now();
 
-            const timer = setInterval(() => {
-                percentage += step;
-                if (percentage >= 100) percentage = 100;
+            function update() {
+                const now = Date.now();
+                const elapsed = now - startTime;
+                let percentage = (elapsed / duration) * 100;
+
+                if (percentage > 100) percentage = 100;
 
                 percentageEl.innerText = Math.round(percentage) + '%';
                 loadingBar.style.width = percentage + '%';
@@ -654,21 +655,28 @@
                 if (percentage > 60 && percentage < 80) statusText.innerText = "IGNITION SEQUENCE START...";
                 if (percentage > 80) statusText.innerText = "READY FOR LIFTOFF...";
 
-                if (percentage >= 100) {
-                    clearInterval(timer);
+                if (percentage < 100) {
+                    requestAnimationFrame(update);
+                } else {
+                    // Complete
                     rocket.classList.add('launching');
                     statusText.innerText = "LIFTOFF!";
+                    
                     setTimeout(() => {
+                        // White Flash starts after rocket launch anim (approx 1.2s)
                         whiteFlash.style.opacity = '1';
+                        
                         setTimeout(() => {
+                            // Reveal Site
                             loadingScreen.style.display = 'none';
                             appDiv.classList.remove('hidden');
                             whiteFlash.style.opacity = '0';
                             setTimeout(() => whiteFlash.style.display = 'none', 1000);
-                        }, 2000); 
+                        }, 2000); // 2 seconds white screen
                     }, 1200); 
                 }
-            }, interval);
+            }
+            requestAnimationFrame(update);
         }
 
         // --- PDF RESUME DOWNLOAD ---
