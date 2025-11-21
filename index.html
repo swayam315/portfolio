@@ -17,6 +17,11 @@
     <!-- jsPDF for PDF generation -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
+    <!-- Firebase SDKs (Restored for Syncing) -->
+    <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore-compat.js"></script>
+
     <style>
         :root {
             --primary: #6366f1;
@@ -416,7 +421,6 @@
                     <input type="text" id="admin-user" placeholder="Username" class="w-full bg-gray-900 border border-gray-700 p-3 rounded mb-4 focus:border-indigo-500 outline-none">
                     <input type="password" id="admin-pass" placeholder="Password" class="w-full bg-gray-900 border border-gray-700 p-3 rounded mb-6 focus:border-indigo-500 outline-none">
                     <button onclick="adminLogin()" class="w-full bg-indigo-600 hover:bg-indigo-700 py-3 rounded font-bold transition">Login</button>
-                    <p class="mt-4 text-xs text-gray-500 text-center">Local mode: User 'admin', Pass 'admin123'</p>
                 </div>
 
                 <!-- Admin Dashboard -->
@@ -426,11 +430,10 @@
                         <button onclick="adminLogout()" class="bg-red-600 px-4 py-2 rounded hover:bg-red-700">Logout</button>
                     </div>
                     
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <!-- Visitor Tracker (MOCKED FOR FRONTEND-ONLY) -->
-                        <div class="glass p-6 rounded-xl">
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        <!-- Visitor Tracker -->
+                        <div class="glass p-6 rounded-xl lg:col-span-1">
                             <h3 class="text-xl font-bold mb-4 text-indigo-400">Session Logs</h3>
-                            <p class="text-xs text-gray-400 mb-2">Note: Backend disabled. Showing local session history.</p>
                             <div class="overflow-y-auto h-96 custom-scrollbar">
                                 <table class="w-full text-sm text-left">
                                     <thead class="text-gray-400 uppercase border-b border-gray-700">
@@ -440,26 +443,24 @@
                                 </table>
                             </div>
                         </div>
-                        <!-- Quick Actions (ADD BUTTONS ARE HERE) -->
-                        <div class="glass p-6 rounded-xl">
-                            <h3 class="text-xl font-bold mb-4 text-indigo-400">Quick Actions</h3>
-                            <p class="text-gray-400 mb-4">Use these buttons to Add or Edit content. "Add" buttons are only visible here.</p>
-                            <div class="grid grid-cols-1 gap-4">
-                                <button onclick="openEditor('education')" class="p-4 bg-green-700 rounded hover:bg-green-600 flex justify-between items-center">
-                                    <span>Add New Education</span> <i class="fas fa-plus"></i>
-                                </button>
-                                <button onclick="openEditor('projects')" class="p-4 bg-green-700 rounded hover:bg-green-600 flex justify-between items-center">
-                                    <span>Add New Project</span> <i class="fas fa-plus"></i>
-                                </button>
-                                <button onclick="openEditor('hackathons')" class="p-4 bg-green-700 rounded hover:bg-green-600 flex justify-between items-center">
-                                    <span>Add New Hackathon</span> <i class="fas fa-plus"></i>
-                                </button>
-                                <button onclick="openEditor('certificates')" class="p-4 bg-green-700 rounded hover:bg-green-600 flex justify-between items-center">
-                                    <span>Add New Certificate</span> <i class="fas fa-plus"></i>
-                                </button>
-                                <button onclick="openEditor('about')" class="p-4 bg-blue-700 rounded hover:bg-blue-600 flex justify-between items-center">
-                                    <span>Edit About Me</span> <i class="fas fa-edit"></i>
-                                </button>
+                        
+                        <!-- Content Management Area -->
+                        <div class="glass p-6 rounded-xl lg:col-span-2">
+                            <h3 class="text-xl font-bold mb-4 text-indigo-400">Content Management</h3>
+                            <p class="text-gray-400 mb-4 text-sm">Select a category to Add, Edit, or Delete content.</p>
+                            
+                            <!-- Tabs -->
+                            <div class="flex space-x-2 mb-6 overflow-x-auto pb-2">
+                                <button onclick="renderAdminList('education')" class="px-4 py-2 bg-gray-800 hover:bg-indigo-600 rounded text-sm whitespace-nowrap transition">Education</button>
+                                <button onclick="renderAdminList('projects')" class="px-4 py-2 bg-gray-800 hover:bg-indigo-600 rounded text-sm whitespace-nowrap transition">Projects</button>
+                                <button onclick="renderAdminList('hackathons')" class="px-4 py-2 bg-gray-800 hover:bg-indigo-600 rounded text-sm whitespace-nowrap transition">Hackathons</button>
+                                <button onclick="renderAdminList('certificates')" class="px-4 py-2 bg-gray-800 hover:bg-indigo-600 rounded text-sm whitespace-nowrap transition">Certificates</button>
+                                <button onclick="openEditor('about')" class="px-4 py-2 bg-blue-700 hover:bg-blue-600 rounded text-sm whitespace-nowrap transition">Edit About</button>
+                            </div>
+
+                            <!-- Dynamic List Area -->
+                            <div id="admin-list-area" class="space-y-4">
+                                <!-- Injected via JS -->
                             </div>
                         </div>
                     </div>
@@ -526,7 +527,7 @@
         </div>
 
         <!-- Generic Editor Modal (Add/Edit) -->
-        <div id="editor-modal" class="fixed inset-0 z-[60] hidden overflow-y-auto">
+        <div id="editor-modal" class="fixed inset-0 z-[60] hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
             <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
                 <div class="fixed inset-0 bg-gray-900 bg-opacity-95 transition-opacity" onclick="closeEditor()"></div>
                 <div class="inline-block align-bottom bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg w-full">
@@ -561,9 +562,16 @@
 
     <script>
         // --- CONFIGURATION ---
-        // Removed Firebase Config
+        const apiKey = ""; 
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = JSON.parse(__firebase_config || '{}');
 
         // --- INITIALIZATION ---
+        const app = firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+        
+        let currentUser = null;
         let isAdmin = false;
         let collectionData = {
             education: [],
@@ -573,47 +581,38 @@
             about: {}
         };
 
-        // --- LOCAL STORAGE HELPERS ---
-        const DB_KEY = 'swayam_portfolio_db';
-        const VISIT_KEY = 'swayam_portfolio_visits';
-
-        function loadData() {
-            const stored = localStorage.getItem(DB_KEY);
-            if (stored) {
-                collectionData = JSON.parse(stored);
+        // --- AUTHENTICATION & STARTUP ---
+        const initAuth = async () => {
+            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                await auth.signInWithCustomToken(__initial_auth_token);
             } else {
-                // Defaults if empty
-                collectionData = {
-                    education: [],
-                    projects: [],
-                    hackathons: [],
-                    certificates: [],
-                    about: { text: "Welcome to my portfolio.", photos: [] }
-                };
-                saveDataToStorage();
+                await auth.signInAnonymously();
             }
-            renderAll();
-        }
+        };
 
-        function saveDataToStorage() {
-            try {
-                localStorage.setItem(DB_KEY, JSON.stringify(collectionData));
-            } catch (e) {
-                alert("Storage Full! Cannot save more photos. Try using smaller images.");
-                console.error(e);
-            }
-        }
-
-        window.onload = function() {
+        // IMMEDIATE ANIMATION START (Before Window Load)
+        // Use DOMContentLoaded to start visual immediately
+        document.addEventListener('DOMContentLoaded', () => {
             generateStars();
-            startAnimation(); // Now runs exactly 5s logic
-            loadData();
-            logLocalVisit();
+            startAnimation(); 
+        });
+
+        window.onload = async function() {
+            await initAuth();
+            auth.onAuthStateChanged(async (user) => {
+                currentUser = user;
+                if (user) {
+                    setupListeners();
+                    logVisitor(); 
+                }
+            });
         };
 
         // --- ANIMATION LOGIC (TIME-BASED FIX) ---
         function generateStars() {
             const starfield = document.getElementById('starfield');
+            if(!starfield) return;
+            starfield.innerHTML = '';
             for(let i=0; i<50; i++) {
                 const star = document.createElement('div');
                 star.className = 'star';
@@ -647,32 +646,32 @@
 
                 if (percentage > 100) percentage = 100;
 
-                percentageEl.innerText = Math.round(percentage) + '%';
-                loadingBar.style.width = percentage + '%';
+                if(percentageEl) percentageEl.innerText = Math.round(percentage) + '%';
+                if(loadingBar) loadingBar.style.width = percentage + '%';
 
-                if (percentage > 20 && percentage < 40) statusText.innerText = "FUELING ENGINES...";
-                if (percentage > 40 && percentage < 60) statusText.innerText = "CALIBRATING SENSORS...";
-                if (percentage > 60 && percentage < 80) statusText.innerText = "IGNITION SEQUENCE START...";
-                if (percentage > 80) statusText.innerText = "READY FOR LIFTOFF...";
+                if (statusText) {
+                    if (percentage > 20 && percentage < 40) statusText.innerText = "FUELING ENGINES...";
+                    else if (percentage > 40 && percentage < 60) statusText.innerText = "CALIBRATING SENSORS...";
+                    else if (percentage > 60 && percentage < 80) statusText.innerText = "IGNITION SEQUENCE START...";
+                    else if (percentage > 80) statusText.innerText = "READY FOR LIFTOFF...";
+                }
 
                 if (percentage < 100) {
                     requestAnimationFrame(update);
                 } else {
                     // Complete
-                    rocket.classList.add('launching');
-                    statusText.innerText = "LIFTOFF!";
+                    if(rocket) rocket.classList.add('launching');
+                    if(statusText) statusText.innerText = "LIFTOFF!";
                     
                     setTimeout(() => {
-                        // White Flash starts after rocket launch anim (approx 1.2s)
-                        whiteFlash.style.opacity = '1';
+                        if(whiteFlash) whiteFlash.style.opacity = '1';
                         
                         setTimeout(() => {
-                            // Reveal Site
-                            loadingScreen.style.display = 'none';
-                            appDiv.classList.remove('hidden');
-                            whiteFlash.style.opacity = '0';
-                            setTimeout(() => whiteFlash.style.display = 'none', 1000);
-                        }, 2000); // 2 seconds white screen
+                            if(loadingScreen) loadingScreen.style.display = 'none';
+                            if(appDiv) appDiv.classList.remove('hidden');
+                            if(whiteFlash) whiteFlash.style.opacity = '0';
+                            setTimeout(() => { if(whiteFlash) whiteFlash.style.display = 'none'; }, 1000);
+                        }, 2000); 
                     }, 1200); 
                 }
             }
@@ -683,82 +682,93 @@
         function downloadResume() {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
-            
             doc.setFont("helvetica", "bold");
             doc.setFontSize(22);
             doc.text("SWAYAM KHANGAONKAR", 20, 20);
-            
             doc.setFontSize(12);
             doc.setFont("helvetica", "normal");
             doc.text("Portfolio: showcase.com", 20, 30);
             doc.line(20, 35, 190, 35);
-
             doc.setFont("helvetica", "bold");
             doc.text("EDUCATION", 20, 45);
             doc.setFont("helvetica", "normal");
             doc.text("Visit showcase.com to see detailed educational background.", 20, 52);
-
             doc.setFont("helvetica", "bold");
             doc.text("PROJECTS", 20, 65);
             doc.setFont("helvetica", "normal");
             doc.text("Projects including AI/ML, Blockchain, and Web Dev are available online.", 20, 72);
-
             doc.setFont("helvetica", "bold");
             doc.text("HACKATHONS", 20, 85);
             doc.setFont("helvetica", "normal");
             doc.text("A history of hackathon participation is documented on the portfolio.", 20, 92);
-            
             doc.setFont("helvetica", "bold");
             doc.text("CONTACT", 20, 105);
             doc.setFont("helvetica", "normal");
             doc.text("Instagram: kswayammmm", 20, 112);
-            
             doc.save("Swayam_Khangaonkar_Resume.pdf");
         }
 
-        // --- MOCKED VISITOR TRACKING ---
-        function logLocalVisit() {
-            let visits = JSON.parse(localStorage.getItem(VISIT_KEY) || '[]');
-            // Only keep last 20
-            if (visits.length > 20) visits.pop();
-            
-            visits.unshift({
-                time: new Date().toLocaleString(),
-                platform: navigator.platform
-            });
-            
-            localStorage.setItem(VISIT_KEY, JSON.stringify(visits));
-            renderVisitorLogs();
+        // --- VISITOR TRACKING (Back to Firebase) ---
+        async function logVisitor() {
+            if (isAdmin) return; 
+            if (!currentUser) return;
+            try {
+                if(sessionStorage.getItem('visited')) return;
+                await db.collection('artifacts').doc(appId).collection('public').doc('data').collection('visitors').add({
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                    userAgent: navigator.userAgent,
+                    platform: navigator.platform
+                });
+                sessionStorage.setItem('visited', 'true');
+            } catch (e) { console.error("Log error", e); }
         }
 
-        function renderVisitorLogs() {
-            if (!isAdmin) return;
-            const visits = JSON.parse(localStorage.getItem(VISIT_KEY) || '[]');
-            const tbody = document.getElementById('visitor-log-body');
-            tbody.innerHTML = visits.map(v => `
-                <tr class="border-b border-gray-800">
-                    <td class="py-2">${v.time}</td>
-                    <td class="py-2 text-xs truncate max-w-xs">${v.platform}</td>
-                </tr>
-            `).join('');
+        // --- DATA FETCHING (Back to Firebase) ---
+        function setupListeners() {
+            const collections = ['education', 'projects', 'hackathons', 'certificates', 'about'];
+            collections.forEach(col => {
+                db.collection('artifacts').doc(appId).collection('public').doc('data').collection(col)
+                  .onSnapshot(snapshot => {
+                      if (col === 'about') {
+                          if (!snapshot.empty) {
+                              const data = snapshot.docs[0].data();
+                              document.getElementById('about-text').innerText = data.text || "Welcome to my profile.";
+                              const photo = (data.photos && data.photos.length > 0) ? data.photos[0] : (data.photoUrl || 'https://via.placeholder.com/300');
+                              document.getElementById('about-img').src = photo;
+                              document.getElementById('about-view').dataset.docId = snapshot.docs[0].id;
+                          }
+                      } else {
+                          collectionData[col] = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                          renderCollection(col);
+                          // If admin view is active, update list
+                          if(isAdmin && document.getElementById('admin-list-area').offsetParent !== null) {
+                              // Find which tab is active or just refresh if matching
+                              // Simplified: just don't crash
+                          }
+                      }
+                  }, err => console.error(`Error fetching ${col}`, err));
+            });
+            if (isAdmin) setupVisitorListener();
+        }
+
+        function setupVisitorListener() {
+            db.collection('artifacts').doc(appId).collection('public').doc('data').collection('visitors')
+                .orderBy('timestamp', 'desc').limit(50)
+                .onSnapshot(snapshot => {
+                    const tbody = document.getElementById('visitor-log-body');
+                    tbody.innerHTML = '';
+                    snapshot.forEach(doc => {
+                        const data = doc.data();
+                        const time = data.timestamp ? data.timestamp.toDate().toLocaleString() : 'Just now';
+                        tbody.innerHTML += `<tr class="border-b border-gray-800"><td class="py-2">${time}</td><td class="py-2 text-xs truncate max-w-xs">${data.userAgent}</td></tr>`;
+                    });
+                });
         }
 
         // --- RENDERING ---
-        function renderAll() {
-            ['education', 'projects', 'hackathons', 'certificates'].forEach(renderCollection);
-            
-            // Render About
-            if (collectionData.about) {
-                document.getElementById('about-text').innerText = collectionData.about.text || "Welcome to my profile.";
-                const photo = (collectionData.about.photos && collectionData.about.photos.length > 0) 
-                    ? collectionData.about.photos[0] 
-                    : 'https://via.placeholder.com/300';
-                document.getElementById('about-img').src = photo;
-            }
-        }
-
         function renderCollection(type) {
             const container = document.getElementById(`${type}-list`);
+            if(!container) return;
             container.innerHTML = '';
             let data = collectionData[type] || [];
 
@@ -766,22 +776,19 @@
             if (type === 'hackathons') data = filterHackathons(data);
             if (type === 'certificates') data = searchFilter(data, 'search-certificates', ['title', 'issuer']);
 
+            if(data.length === 0) {
+                container.innerHTML = '<div class="col-span-full text-center text-gray-500">No items found.</div>';
+                return;
+            }
+
             data.forEach(item => {
                 let cardHTML = '';
-                const adminControls = isAdmin ? `
-                    <div class="absolute top-2 right-2 flex gap-2 z-10">
-                        <button onclick="openEditor('${type}', '${item.id}')" class="bg-blue-600 p-1 rounded text-xs text-white"><i class="fas fa-edit"></i></button>
-                        <button onclick="deleteItem('${type}', '${item.id}')" class="bg-red-600 p-1 rounded text-xs text-white"><i class="fas fa-trash"></i></button>
-                    </div>
-                ` : '';
-                
-                const coverImg = (item.photos && item.photos.length > 0) ? item.photos[0] : null;
+                const coverImg = (item.photos && item.photos.length > 0) ? item.photos[0] : (item.imageUrl || null);
                 const imgHtml = coverImg ? `<div class="h-48 w-full mb-4 rounded-lg overflow-hidden"><img src="${coverImg}" class="w-full h-full object-cover"></div>` : '';
 
                 if (type === 'education') {
                     cardHTML = `
                         <div class="glass p-6 rounded-xl hover:bg-gray-800 transition cursor-pointer relative group" onclick="showDetails('education', '${item.id}')">
-                            ${adminControls}
                             ${imgHtml}
                             <h3 class="text-xl font-bold text-indigo-400">${item.degree || 'Degree'}</h3>
                             <p class="text-lg font-semibold">${item.school || 'Institution'}</p>
@@ -793,7 +800,6 @@
                 } else if (type === 'projects') {
                     cardHTML = `
                         <div class="glass p-6 rounded-xl hover:transform hover:-translate-y-1 transition relative">
-                            ${adminControls}
                             ${imgHtml}
                             <h3 class="text-xl font-bold text-white mb-2">${item.title || 'Project'}</h3>
                             <div class="flex gap-2 mb-3">
@@ -810,7 +816,6 @@
                     
                     cardHTML = `
                         <div class="glass p-6 rounded-xl relative">
-                            ${adminControls}
                             ${imgHtml}
                             <div class="flex justify-between items-start mb-2">
                                 <h3 class="text-xl font-bold">${item.name || 'Hackathon'}</h3>
@@ -824,7 +829,6 @@
                 } else if (type === 'certificates') {
                      cardHTML = `
                         <div class="glass p-4 rounded-xl relative hover:bg-gray-800 transition">
-                            ${adminControls}
                             <div class="h-32 bg-gray-800 rounded mb-3 overflow-hidden">
                                 ${coverImg ? `<img src="${coverImg}" class="w-full h-full object-cover" onclick="window.open('${coverImg}')">` : '<div class="w-full h-full flex items-center justify-center text-gray-600"><i class="fas fa-certificate fa-2x"></i></div>'}
                             </div>
@@ -897,8 +901,8 @@
                 isAdmin = true;
                 document.getElementById('nav-admin-btn').classList.add('text-green-400');
                 router('admin');
-                renderAll(); 
-                renderVisitorLogs();
+                renderAdminList('education'); // Default view
+                setupVisitorListener();
             } else { alert('Invalid credentials'); }
         }
 
@@ -908,7 +912,54 @@
             document.getElementById('admin-user').value = '';
             document.getElementById('admin-pass').value = '';
             router('home');
-            renderAll();
+        }
+        
+        // --- ADMIN LIST MANAGEMENT ---
+        function renderAdminList(type) {
+            const area = document.getElementById('admin-list-area');
+            area.innerHTML = '';
+            
+            // Add Button
+            const addBtn = document.createElement('button');
+            addBtn.className = 'w-full p-3 bg-green-700 hover:bg-green-600 rounded flex justify-between items-center font-bold mb-4';
+            addBtn.innerHTML = `<span>Add New ${type.charAt(0).toUpperCase() + type.slice(1)}</span> <i class="fas fa-plus"></i>`;
+            
+            // FIX: Direct function reference
+            addBtn.addEventListener('click', function() {
+                openEditor(type);
+            });
+            
+            area.appendChild(addBtn);
+
+            // List Items
+            const items = collectionData[type] || [];
+            if (items.length === 0) {
+                area.innerHTML += '<div class="text-gray-500 text-center py-4">No items found. Add one!</div>';
+                return;
+            }
+
+            items.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'bg-gray-800 p-4 rounded flex justify-between items-center border border-gray-700';
+                
+                let title = 'Item';
+                if(type==='education') title = item.school;
+                else if(type==='projects' || type==='certificates') title = item.title;
+                else if(type==='hackathons') title = item.name;
+
+                div.innerHTML = `
+                    <span class="truncate font-medium pr-4">${title}</span>
+                    <div class="flex space-x-2">
+                        <button class="edit-btn p-2 bg-blue-600 hover:bg-blue-500 rounded text-white"><i class="fas fa-edit"></i></button>
+                        <button class="del-btn p-2 bg-red-600 hover:bg-red-500 rounded text-white"><i class="fas fa-trash"></i></button>
+                    </div>
+                `;
+                // Event delegation/binding
+                div.querySelector('.edit-btn').onclick = () => openEditor(type, item.id);
+                div.querySelector('.del-btn').onclick = () => deleteItem(type, item.id);
+                
+                area.appendChild(div);
+            });
         }
 
         // --- EDITOR MODAL LOGIC & IMAGE HANDLING ---
@@ -931,10 +982,18 @@
             let data = {};
             if (id && type !== 'about') {
                 data = collectionData[type].find(i => i.id === id) || {};
-                tempPhotos = data.photos || [];
+                tempPhotos = data.photos || (data.imageUrl ? [data.imageUrl] : []);
             } else if (type === 'about') {
-                 data = collectionData.about || {};
-                 tempPhotos = data.photos || [];
+                 // Since 'about' is a single doc but we need to edit it, check collectionData logic
+                 // collectionData.about is usually an object, not array. 
+                 // But on Firebase fetch, it might just be the data directly. 
+                 // Let's assume we pull from the UI or memory.
+                 // For edit, we need current text.
+                 data = {
+                     text: document.getElementById('about-text').innerText,
+                     photos: [document.getElementById('about-img').src]
+                 };
+                 tempPhotos = data.photos;
             }
 
             // Common Image Input Helper
@@ -1017,13 +1076,13 @@
                         const img = new Image();
                         img.onload = () => {
                             const canvas = document.createElement('canvas');
-                            const MAX_WIDTH = 500; // Slightly reduced for LocalStorage limits
+                            const MAX_WIDTH = 600; 
                             const scaleSize = MAX_WIDTH / img.width;
                             canvas.width = MAX_WIDTH;
                             canvas.height = img.height * scaleSize;
                             const ctx = canvas.getContext('2d');
                             ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                            const dataUrl = canvas.toDataURL('image/jpeg', 0.6); // Lower quality for storage
+                            const dataUrl = canvas.toDataURL('image/jpeg', 0.6); 
                             tempPhotos.push(dataUrl);
                             updatePreview();
                         }
@@ -1050,10 +1109,10 @@
         }
 
         async function saveData() {
+            if (!currentUser) return;
             const type = currentEditType;
             const id = currentEditId;
             
-            // Merge manual URLs
             const urlInput = document.getElementById('in-urls');
             if (urlInput && urlInput.value.trim()) {
                 const urls = urlInput.value.split(',').map(s => s.trim()).filter(s => s);
@@ -1062,20 +1121,17 @@
                 }
             }
 
-            let newItem = { 
-                id: id || Date.now().toString(), // Generate simple ID
-                photos: tempPhotos 
-            }; 
+            let payload = { photos: tempPhotos }; 
 
             if (type === 'education') {
-                Object.assign(newItem, {
+                Object.assign(payload, {
                     school: document.getElementById('in-school').value,
                     degree: document.getElementById('in-degree').value,
                     year: document.getElementById('in-year').value,
                     description: document.getElementById('in-desc').value
                 });
             } else if (type === 'projects') {
-                Object.assign(newItem, {
+                Object.assign(payload, {
                     title: document.getElementById('in-title').value,
                     description: document.getElementById('in-desc').value,
                     tags: document.getElementById('in-tags').value,
@@ -1083,7 +1139,7 @@
                 });
             } else if (type === 'hackathons') {
                 const mode = document.getElementById('in-mode').value;
-                Object.assign(newItem, {
+                Object.assign(payload, {
                     name: document.getElementById('in-name').value,
                     description: document.getElementById('in-desc').value,
                     hostLink: document.getElementById('in-host').value,
@@ -1091,39 +1147,46 @@
                     location: mode === 'online' ? 'Online' : document.getElementById('in-loc').value
                 });
             } else if (type === 'certificates') {
-                Object.assign(newItem, {
+                Object.assign(payload, {
                     title: document.getElementById('in-title').value,
-                    issuer: document.getElementById('in-issuer').value
+                    issuer: document.getElementById('in-issuer').value,
+                    imageUrl: tempPhotos[0] || '' // Legacy compat
                 });
             } else if (type === 'about') {
-                collectionData.about = {
+                payload = {
                     text: document.getElementById('in-text').value,
-                    photos: tempPhotos
+                    photos: tempPhotos,
+                    photoUrl: tempPhotos[0] || '' // Legacy
                 };
-                saveDataToStorage();
-                renderAll();
+            }
+
+            try {
+                const colRef = db.collection('artifacts').doc(appId).collection('public').doc('data').collection(type);
+                
+                if (type === 'about') {
+                    const snap = await colRef.limit(1).get();
+                    if (snap.empty) await colRef.add(payload);
+                    else await colRef.doc(snap.docs[0].id).update(payload);
+                } else {
+                    if (id) await colRef.doc(id).update(payload);
+                    else await colRef.add(payload);
+                }
                 closeEditor();
-                return;
+                // Re-render list if admin is active
+                if(isAdmin && type !== 'about') renderAdminList(type);
+            } catch (e) {
+                console.error("Save Error", e);
+                alert("Error saving data. Files might be too large for database (1MB limit per doc).");
             }
-
-            // Push to local array
-            if (id) {
-                const index = collectionData[type].findIndex(i => i.id === id);
-                if (index !== -1) collectionData[type][index] = newItem;
-            } else {
-                collectionData[type].push(newItem);
-            }
-
-            saveDataToStorage();
-            renderAll();
-            closeEditor();
         }
 
         async function deleteItem(type, id) {
-            if(!confirm("Delete this item?")) return;
-            collectionData[type] = collectionData[type].filter(i => i.id !== id);
-            saveDataToStorage();
-            renderAll();
+            if(!confirm("Delete?")) return;
+            try { 
+                await db.collection('artifacts').doc(appId).collection('public').doc('data').collection(type).doc(id).delete();
+                if(isAdmin && type !== 'about') renderAdminList(type);
+            } 
+            catch (e) { console.error(e); }
         }
 
         // --- DETAIL POP-UP WITH CAROUSEL ---
@@ -1135,6 +1198,7 @@
             if (!item) return;
 
             currentCarouselPhotos = item.photos || [];
+            if (currentCarouselPhotos.length === 0 && item.imageUrl) currentCarouselPhotos = [item.imageUrl];
             currentCarouselIdx = 0;
 
             const content = document.getElementById('detail-content');
