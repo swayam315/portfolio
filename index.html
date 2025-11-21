@@ -17,11 +17,6 @@
     <!-- jsPDF for PDF generation -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
-    <!-- Firebase SDKs (Compat versions for global namespace) -->
-    <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore-compat.js"></script>
-
     <style>
         :root {
             --primary: #6366f1;
@@ -421,6 +416,7 @@
                     <input type="text" id="admin-user" placeholder="Username" class="w-full bg-gray-900 border border-gray-700 p-3 rounded mb-4 focus:border-indigo-500 outline-none">
                     <input type="password" id="admin-pass" placeholder="Password" class="w-full bg-gray-900 border border-gray-700 p-3 rounded mb-6 focus:border-indigo-500 outline-none">
                     <button onclick="adminLogin()" class="w-full bg-indigo-600 hover:bg-indigo-700 py-3 rounded font-bold transition">Login</button>
+                    <p class="mt-4 text-xs text-gray-500 text-center">Local mode: User 'admin', Pass 'admin123'</p>
                 </div>
 
                 <!-- Admin Dashboard -->
@@ -431,13 +427,14 @@
                     </div>
                     
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <!-- Visitor Tracker -->
+                        <!-- Visitor Tracker (MOCKED FOR FRONTEND-ONLY) -->
                         <div class="glass p-6 rounded-xl">
-                            <h3 class="text-xl font-bold mb-4 text-indigo-400">Visitor Tracker</h3>
+                            <h3 class="text-xl font-bold mb-4 text-indigo-400">Session Logs</h3>
+                            <p class="text-xs text-gray-400 mb-2">Note: Backend disabled. Showing local session history.</p>
                             <div class="overflow-y-auto h-96 custom-scrollbar">
                                 <table class="w-full text-sm text-left">
                                     <thead class="text-gray-400 uppercase border-b border-gray-700">
-                                        <tr><th class="py-3">Time</th><th class="py-3">Device info</th></tr>
+                                        <tr><th class="py-3">Time</th><th class="py-3">Platform</th></tr>
                                     </thead>
                                     <tbody id="visitor-log-body" class="text-gray-300"></tbody>
                                 </table>
@@ -564,44 +561,54 @@
 
     <script>
         // --- CONFIGURATION ---
-        const apiKey = ""; // Set dynamically by environment
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const firebaseConfig = JSON.parse(__firebase_config || '{}');
+        // Removed Firebase Config
 
         // --- INITIALIZATION ---
-        const app = firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const db = firebase.firestore();
-        
-        let currentUser = null;
         let isAdmin = false;
         let collectionData = {
             education: [],
             projects: [],
             hackathons: [],
-            certificates: []
+            certificates: [],
+            about: {}
         };
 
-        // --- AUTHENTICATION & STARTUP ---
-        const initAuth = async () => {
-            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                await auth.signInWithCustomToken(__initial_auth_token);
+        // --- LOCAL STORAGE HELPERS ---
+        const DB_KEY = 'swayam_portfolio_db';
+        const VISIT_KEY = 'swayam_portfolio_visits';
+
+        function loadData() {
+            const stored = localStorage.getItem(DB_KEY);
+            if (stored) {
+                collectionData = JSON.parse(stored);
             } else {
-                await auth.signInAnonymously();
+                // Defaults if empty
+                collectionData = {
+                    education: [],
+                    projects: [],
+                    hackathons: [],
+                    certificates: [],
+                    about: { text: "Welcome to my portfolio.", photos: [] }
+                };
+                saveDataToStorage();
             }
-        };
+            renderAll();
+        }
 
-        window.onload = async function() {
+        function saveDataToStorage() {
+            try {
+                localStorage.setItem(DB_KEY, JSON.stringify(collectionData));
+            } catch (e) {
+                alert("Storage Full! Cannot save more photos. Try using smaller images.");
+                console.error(e);
+            }
+        }
+
+        window.onload = function() {
             generateStars();
             startAnimation();
-            await initAuth();
-            auth.onAuthStateChanged(async (user) => {
-                currentUser = user;
-                if (user) {
-                    setupListeners();
-                    logVisitor(); 
-                }
-            });
+            loadData();
+            logLocalVisit();
         };
 
         // --- ANIMATION LOGIC ---
@@ -701,64 +708,51 @@
             doc.save("Swayam_Khangaonkar_Resume.pdf");
         }
 
-        // --- VISITOR TRACKING ---
-        async function logVisitor() {
-            if (isAdmin) return; 
-            if (!currentUser) return;
-            try {
-                if(sessionStorage.getItem('visited')) return;
-                await db.collection('artifacts').doc(appId).collection('public').doc('data').collection('visitors').add({
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                    userAgent: navigator.userAgent,
-                    platform: navigator.platform
-                });
-                sessionStorage.setItem('visited', 'true');
-            } catch (e) { console.error("Log error", e); }
-        }
-
-        // --- DATA FETCHING ---
-        function setupListeners() {
-            const collections = ['education', 'projects', 'hackathons', 'certificates', 'about'];
-            collections.forEach(col => {
-                db.collection('artifacts').doc(appId).collection('public').doc('data').collection(col)
-                  .onSnapshot(snapshot => {
-                      if (col === 'about') {
-                          if (!snapshot.empty) {
-                              const data = snapshot.docs[0].data();
-                              document.getElementById('about-text').innerText = data.text || "Welcome to my profile.";
-                              // Use first photo from array if available, or old single photoUrl field
-                              const photo = (data.photos && data.photos.length > 0) ? data.photos[0] : (data.photoUrl || 'https://via.placeholder.com/300');
-                              document.getElementById('about-img').src = photo;
-                              document.getElementById('about-view').dataset.docId = snapshot.docs[0].id;
-                          }
-                      } else {
-                          collectionData[col] = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                          renderCollection(col);
-                      }
-                  }, err => console.error(`Error fetching ${col}`, err));
+        // --- MOCKED VISITOR TRACKING ---
+        function logLocalVisit() {
+            let visits = JSON.parse(localStorage.getItem(VISIT_KEY) || '[]');
+            // Only keep last 20
+            if (visits.length > 20) visits.pop();
+            
+            visits.unshift({
+                time: new Date().toLocaleString(),
+                platform: navigator.platform
             });
-            if (isAdmin) setupVisitorListener();
+            
+            localStorage.setItem(VISIT_KEY, JSON.stringify(visits));
+            renderVisitorLogs();
         }
 
-        function setupVisitorListener() {
-            db.collection('artifacts').doc(appId).collection('public').doc('data').collection('visitors')
-                .orderBy('timestamp', 'desc').limit(50)
-                .onSnapshot(snapshot => {
-                    const tbody = document.getElementById('visitor-log-body');
-                    tbody.innerHTML = '';
-                    snapshot.forEach(doc => {
-                        const data = doc.data();
-                        const time = data.timestamp ? data.timestamp.toDate().toLocaleString() : 'Just now';
-                        tbody.innerHTML += `<tr class="border-b border-gray-800"><td class="py-2">${time}</td><td class="py-2 text-xs truncate max-w-xs">${data.userAgent}</td></tr>`;
-                    });
-                });
+        function renderVisitorLogs() {
+            if (!isAdmin) return;
+            const visits = JSON.parse(localStorage.getItem(VISIT_KEY) || '[]');
+            const tbody = document.getElementById('visitor-log-body');
+            tbody.innerHTML = visits.map(v => `
+                <tr class="border-b border-gray-800">
+                    <td class="py-2">${v.time}</td>
+                    <td class="py-2 text-xs truncate max-w-xs">${v.platform}</td>
+                </tr>
+            `).join('');
         }
 
         // --- RENDERING ---
+        function renderAll() {
+            ['education', 'projects', 'hackathons', 'certificates'].forEach(renderCollection);
+            
+            // Render About
+            if (collectionData.about) {
+                document.getElementById('about-text').innerText = collectionData.about.text || "Welcome to my profile.";
+                const photo = (collectionData.about.photos && collectionData.about.photos.length > 0) 
+                    ? collectionData.about.photos[0] 
+                    : 'https://via.placeholder.com/300';
+                document.getElementById('about-img').src = photo;
+            }
+        }
+
         function renderCollection(type) {
             const container = document.getElementById(`${type}-list`);
             container.innerHTML = '';
-            let data = collectionData[type];
+            let data = collectionData[type] || [];
 
             if (type === 'projects') data = filterProjects(data);
             if (type === 'hackathons') data = filterHackathons(data);
@@ -766,7 +760,6 @@
 
             data.forEach(item => {
                 let cardHTML = '';
-                // Controls only visible if admin, but button functionality moved to Dashboard
                 const adminControls = isAdmin ? `
                     <div class="absolute top-2 right-2 flex gap-2 z-10">
                         <button onclick="openEditor('${type}', '${item.id}')" class="bg-blue-600 p-1 rounded text-xs text-white"><i class="fas fa-edit"></i></button>
@@ -774,8 +767,7 @@
                     </div>
                 ` : '';
                 
-                // Cover Image Logic
-                const coverImg = (item.photos && item.photos.length > 0) ? item.photos[0] : (item.imageUrl || null);
+                const coverImg = (item.photos && item.photos.length > 0) ? item.photos[0] : null;
                 const imgHtml = coverImg ? `<div class="h-48 w-full mb-4 rounded-lg overflow-hidden"><img src="${coverImg}" class="w-full h-full object-cover"></div>` : '';
 
                 if (type === 'education') {
@@ -822,13 +814,11 @@
                         </div>
                     `;
                 } else if (type === 'certificates') {
-                    // Certificates usually have just one image
-                    const certImg = item.imageUrl || (item.photos ? item.photos[0] : null);
                      cardHTML = `
                         <div class="glass p-4 rounded-xl relative hover:bg-gray-800 transition">
                             ${adminControls}
                             <div class="h-32 bg-gray-800 rounded mb-3 overflow-hidden">
-                                ${certImg ? `<img src="${certImg}" class="w-full h-full object-cover" onclick="window.open('${certImg}')">` : '<div class="w-full h-full flex items-center justify-center text-gray-600"><i class="fas fa-certificate fa-2x"></i></div>'}
+                                ${coverImg ? `<img src="${coverImg}" class="w-full h-full object-cover" onclick="window.open('${coverImg}')">` : '<div class="w-full h-full flex items-center justify-center text-gray-600"><i class="fas fa-certificate fa-2x"></i></div>'}
                             </div>
                             <h4 class="font-bold text-white truncate">${item.title || 'Certificate'}</h4>
                             <p class="text-xs text-gray-400">${item.issuer || 'Issuer'}</p>
@@ -899,8 +889,8 @@
                 isAdmin = true;
                 document.getElementById('nav-admin-btn').classList.add('text-green-400');
                 router('admin');
-                ['education', 'projects', 'hackathons', 'certificates'].forEach(renderCollection);
-                setupVisitorListener();
+                renderAll(); 
+                renderVisitorLogs();
             } else { alert('Invalid credentials'); }
         }
 
@@ -910,13 +900,13 @@
             document.getElementById('admin-user').value = '';
             document.getElementById('admin-pass').value = '';
             router('home');
-            ['education', 'projects', 'hackathons', 'certificates'].forEach(renderCollection);
+            renderAll();
         }
 
         // --- EDITOR MODAL LOGIC & IMAGE HANDLING ---
         let currentEditType = null;
         let currentEditId = null;
-        let tempPhotos = []; // Store Base64 strings temporarily
+        let tempPhotos = []; 
 
         function openEditor(type, id = null) {
             currentEditType = type;
@@ -933,16 +923,10 @@
             let data = {};
             if (id && type !== 'about') {
                 data = collectionData[type].find(i => i.id === id) || {};
-                tempPhotos = data.photos || (data.imageUrl ? [data.imageUrl] : []);
+                tempPhotos = data.photos || [];
             } else if (type === 'about') {
-                 const d = document.getElementById('about-view').dataset; // simplistic, better to fetch from db if needed, but here relying on cached
-                 // Fetch real data from memory
-                 // Since 'about' is a single doc, we need to get it differently or just rely on rendered text
-                 // Better: we can't rely on collectionData['about'] as it's different structure.
-                 // Let's assume empty if not loaded or grab from DOM for now
-                 data = { text: document.getElementById('about-text').innerText };
-                 const currentImg = document.getElementById('about-img').src;
-                 if (currentImg) tempPhotos = [currentImg];
+                 data = collectionData.about || {};
+                 tempPhotos = data.photos || [];
             }
 
             // Common Image Input Helper
@@ -1025,13 +1009,13 @@
                         const img = new Image();
                         img.onload = () => {
                             const canvas = document.createElement('canvas');
-                            const MAX_WIDTH = 600;
+                            const MAX_WIDTH = 500; // Slightly reduced for LocalStorage limits
                             const scaleSize = MAX_WIDTH / img.width;
                             canvas.width = MAX_WIDTH;
                             canvas.height = img.height * scaleSize;
                             const ctx = canvas.getContext('2d');
                             ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                            const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+                            const dataUrl = canvas.toDataURL('image/jpeg', 0.6); // Lower quality for storage
                             tempPhotos.push(dataUrl);
                             updatePreview();
                         }
@@ -1058,7 +1042,6 @@
         }
 
         async function saveData() {
-            if (!currentUser) return;
             const type = currentEditType;
             const id = currentEditId;
             
@@ -1071,17 +1054,20 @@
                 }
             }
 
-            let payload = { photos: tempPhotos }; // Common
+            let newItem = { 
+                id: id || Date.now().toString(), // Generate simple ID
+                photos: tempPhotos 
+            }; 
 
             if (type === 'education') {
-                Object.assign(payload, {
+                Object.assign(newItem, {
                     school: document.getElementById('in-school').value,
                     degree: document.getElementById('in-degree').value,
                     year: document.getElementById('in-year').value,
                     description: document.getElementById('in-desc').value
                 });
             } else if (type === 'projects') {
-                Object.assign(payload, {
+                Object.assign(newItem, {
                     title: document.getElementById('in-title').value,
                     description: document.getElementById('in-desc').value,
                     tags: document.getElementById('in-tags').value,
@@ -1089,7 +1075,7 @@
                 });
             } else if (type === 'hackathons') {
                 const mode = document.getElementById('in-mode').value;
-                Object.assign(payload, {
+                Object.assign(newItem, {
                     name: document.getElementById('in-name').value,
                     description: document.getElementById('in-desc').value,
                     hostLink: document.getElementById('in-host').value,
@@ -1097,41 +1083,39 @@
                     location: mode === 'online' ? 'Online' : document.getElementById('in-loc').value
                 });
             } else if (type === 'certificates') {
-                Object.assign(payload, {
+                Object.assign(newItem, {
                     title: document.getElementById('in-title').value,
-                    issuer: document.getElementById('in-issuer').value,
-                    imageUrl: tempPhotos[0] || '' // Legacy compat
+                    issuer: document.getElementById('in-issuer').value
                 });
             } else if (type === 'about') {
-                payload = {
+                collectionData.about = {
                     text: document.getElementById('in-text').value,
-                    photos: tempPhotos,
-                    photoUrl: tempPhotos[0] || '' // Legacy
+                    photos: tempPhotos
                 };
+                saveDataToStorage();
+                renderAll();
+                closeEditor();
+                return;
             }
 
-            try {
-                const colRef = db.collection('artifacts').doc(appId).collection('public').doc('data').collection(type);
-                
-                if (type === 'about') {
-                    const snap = await colRef.limit(1).get();
-                    if (snap.empty) await colRef.add(payload);
-                    else await colRef.doc(snap.docs[0].id).update(payload);
-                } else {
-                    if (id) await colRef.doc(id).update(payload);
-                    else await colRef.add(payload);
-                }
-                closeEditor();
-            } catch (e) {
-                console.error("Save Error", e);
-                alert("Error saving data. Files might be too large for database (1MB limit).");
+            // Push to local array
+            if (id) {
+                const index = collectionData[type].findIndex(i => i.id === id);
+                if (index !== -1) collectionData[type][index] = newItem;
+            } else {
+                collectionData[type].push(newItem);
             }
+
+            saveDataToStorage();
+            renderAll();
+            closeEditor();
         }
 
         async function deleteItem(type, id) {
-            if(!confirm("Delete?")) return;
-            try { await db.collection('artifacts').doc(appId).collection('public').doc('data').collection(type).doc(id).delete(); } 
-            catch (e) { console.error(e); }
+            if(!confirm("Delete this item?")) return;
+            collectionData[type] = collectionData[type].filter(i => i.id !== id);
+            saveDataToStorage();
+            renderAll();
         }
 
         // --- DETAIL POP-UP WITH CAROUSEL ---
@@ -1142,15 +1126,12 @@
             const item = collectionData[type].find(i => i.id === id);
             if (!item) return;
 
-            // Prepare Photos
             currentCarouselPhotos = item.photos || [];
-            if (currentCarouselPhotos.length === 0 && item.imageUrl) currentCarouselPhotos = [item.imageUrl];
             currentCarouselIdx = 0;
 
             const content = document.getElementById('detail-content');
             content.innerHTML = ''; 
 
-            // Carousel HTML
             let carouselHtml = '';
             if (currentCarouselPhotos.length > 0) {
                 carouselHtml = `
