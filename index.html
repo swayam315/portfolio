@@ -14,13 +14,8 @@
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
 
-    <!-- jsPDF for PDF generation -->
+    <!-- jsPDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
-    <!-- Firebase SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore-compat.js"></script>
 
     <style>
         :root {
@@ -36,203 +31,55 @@
             overflow-x: hidden;
         }
 
-        /* CRITICAL: Ensure hidden elements are actually hidden before scripts load */
-        .hidden {
+        /* FORCE HIDE until animation is done */
+        .hidden-force {
             display: none !important;
         }
 
         /* Scrollbar */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #1e293b;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #4f46e5;
-            border-radius: 4px;
-        }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #1e293b; }
+        ::-webkit-scrollbar-thumb { background: #4f46e5; border-radius: 4px; }
 
         /* --- ANIMATION STYLES --- */
         #loading-screen {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            top: 0; left: 0; width: 100%; height: 100%;
             background: radial-gradient(ellipse at bottom, #1b2735 0%, #090a0f 100%);
             z-index: 9999;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden;
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
         }
 
-        .stars {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-        }
+        .stars { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
+        .star { position: absolute; background: white; border-radius: 50%; animation: moveStar linear infinite; }
+        @keyframes moveStar { from { transform: translateY(-10vh); opacity: 0; } to { transform: translateY(110vh); opacity: 0; } 10%, 90% { opacity: 1; } }
+
+        .rocket-container { position: relative; z-index: 10; margin-bottom: 2rem; transition: transform 0.3s ease; }
+        .rocket-icon { font-size: 100px; color: white; filter: drop-shadow(0 0 15px rgba(99, 102, 241, 0.5)); transform: rotate(-45deg); }
+        .rocket-flame { position: absolute; bottom: -30px; left: 50%; transform: translateX(-50%); width: 20px; height: 40px; background: linear-gradient(to bottom, #ffcc00, #ff3300, transparent); border-radius: 50% 50% 20% 20%; filter: blur(5px); animation: flame-flicker 0.1s infinite; opacity: 0; transition: opacity 0.5s; }
         
-        .star {
-            position: absolute;
-            background: white;
-            border-radius: 50%;
-            animation: moveStar linear infinite;
-        }
+        .launching .rocket-icon { transform: translateY(-150vh) rotate(-45deg); transition: transform 1.5s cubic-bezier(0.55, 0.055, 0.675, 0.19); }
+        .launching .rocket-flame { opacity: 1; height: 100px; }
 
-        @keyframes moveStar {
-            from { transform: translateY(-10vh); opacity: 0; }
-            10% { opacity: 1; }
-            90% { opacity: 1; }
-            to { transform: translateY(110vh); opacity: 0; }
-        }
+        @keyframes flame-flicker { 0%, 100% { height: 40px; transform: translateX(-50%) scale(1); } 50% { height: 50px; transform: translateX(-50%) scale(1.1); } }
 
-        .rocket-container {
-            position: relative;
-            z-index: 10;
-            margin-bottom: 2rem;
-            transition: transform 0.3s ease;
-        }
+        .progress-wrapper { width: 300px; position: relative; z-index: 10; }
+        .loading-bar-bg { width: 100%; height: 6px; background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden; margin-top: 20px; }
+        .loading-bar-fill { height: 100%; background: linear-gradient(90deg, #4f46e5, #a855f7); width: 0%; box-shadow: 0 0 20px rgba(168, 85, 247, 0.6); }
 
-        .rocket-flame {
-            position: absolute;
-            bottom: -30px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 20px;
-            height: 40px;
-            background: linear-gradient(to bottom, #ffcc00, #ff3300, transparent);
-            border-radius: 50% 50% 20% 20%;
-            filter: blur(5px);
-            animation: flame-flicker 0.1s infinite;
-            opacity: 0;
-            transition: opacity 0.5s;
-        }
-
-        @keyframes flame-flicker {
-            0% { height: 40px; transform: translateX(-50%) scale(1); }
-            50% { height: 50px; transform: translateX(-50%) scale(1.1); }
-            100% { height: 40px; transform: translateX(-50%) scale(1); }
-        }
-
-        .rocket-icon {
-            font-size: 100px;
-            color: white;
-            filter: drop-shadow(0 0 15px rgba(99, 102, 241, 0.5));
-            transform: rotate(-45deg); 
-        }
-
-        .launching .rocket-icon {
-            transform: translateY(-150vh) rotate(-45deg);
-            transition: transform 1.5s cubic-bezier(0.55, 0.055, 0.675, 0.19);
-        }
-        
-        .launching .rocket-flame {
-            opacity: 1;
-            height: 100px;
-        }
-
-        .progress-wrapper {
-            width: 300px;
-            position: relative;
-            z-index: 10;
-        }
-        
-        .loading-bar-bg {
-            width: 100%;
-            height: 6px;
-            background: rgba(255,255,255,0.1);
-            border-radius: 10px;
-            overflow: hidden;
-            margin-top: 20px;
-        }
-
-        .loading-bar-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #4f46e5, #a855f7);
-            width: 0%;
-            /* Removed transition for smoother JS control */
-            box-shadow: 0 0 20px rgba(168, 85, 247, 0.6);
-        }
-
-        .white-flash {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: white;
-            opacity: 0;
-            pointer-events: none;
-            z-index: 10000;
-            transition: opacity 0.1s ease;
-        }
+        .white-flash { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; opacity: 0; pointer-events: none; z-index: 10000; transition: opacity 0.1s ease; }
 
         /* Glassmorphism */
-        .glass {
-            background: rgba(30, 41, 59, 0.7);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        /* Modal & Carousel */
-        .modal {
-            transition: opacity 0.3s ease;
-            background: rgba(0,0,0,0.8);
-        }
+        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
         
-        .carousel-container {
-            position: relative;
-            width: 100%;
-            height: 400px;
-            background: #000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 0.5rem;
-            overflow: hidden;
-            margin-bottom: 1rem;
-        }
-        .carousel-img {
-            max-width: 100%;
-            max-height: 100%;
-            object-fit: contain;
-            display: none;
-        }
-        .carousel-img.active {
-            display: block;
-        }
-        .carousel-btn {
-            position: absolute;
-            top: 50%;
-            transform: translateY(-50%);
-            background: rgba(0,0,0,0.5);
-            color: white;
-            padding: 10px 15px;
-            cursor: pointer;
-            border-radius: 50%;
-            border: 1px solid rgba(255,255,255,0.2);
-            z-index: 20;
-        }
-        .carousel-btn:hover { background: rgba(255,255,255,0.2); }
-        .prev-btn { left: 10px; }
-        .next-btn { right: 10px; }
-
-        /* Blob Animation */
-        @keyframes blob {
-            0% { transform: translate(0px, 0px) scale(1); }
-            33% { transform: translate(30px, -50px) scale(1.1); }
-            66% { transform: translate(-20px, 20px) scale(0.9); }
-            100% { transform: translate(0px, 0px) scale(1); }
-        }
-        .animate-blob {
-            animation: blob 7s infinite;
-        }
+        /* Carousel */
+        .carousel-container { position: relative; width: 100%; height: 300px; background: #000; display: flex; align-items: center; justify-content: center; border-radius: 0.5rem; overflow: hidden; margin-bottom: 1rem; }
+        .carousel-img { max-width: 100%; max-height: 100%; object-fit: contain; }
+        
+        /* Blur Animation */
+        .animate-blob { animation: blob 7s infinite; }
+        @keyframes blob { 0% { transform: translate(0px, 0px) scale(1); } 33% { transform: translate(30px, -50px) scale(1.1); } 66% { transform: translate(-20px, 20px) scale(0.9); } 100% { transform: translate(0px, 0px) scale(1); } }
         .animation-delay-2000 { animation-delay: 2s; }
         .animation-delay-4000 { animation-delay: 4s; }
     </style>
@@ -242,13 +89,10 @@
     <!-- Loading Screen -->
     <div id="loading-screen">
         <div class="stars" id="starfield"></div>
-        <!-- Percentage Number REMOVED -->
-        
         <div class="rocket-container">
             <i class="fas fa-rocket rocket-icon"></i>
             <div class="rocket-flame"></div>
         </div>
-        
         <div class="progress-wrapper">
             <div class="flex justify-between text-xs text-indigo-300 font-mono mb-1">
                 <span>SYSTEM CHECK</span>
@@ -263,7 +107,7 @@
     <div id="white-flash" class="white-flash"></div>
 
     <!-- Main Application -->
-    <div id="app" class="hidden">
+    <div id="app" class="hidden-force">
         
         <!-- Navigation -->
         <nav class="fixed top-0 w-full z-50 glass">
@@ -295,7 +139,6 @@
             <div class="md:hidden hidden bg-gray-900" id="mobile-menu">
                 <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
                     <button onclick="router('home')" class="block w-full text-left hover:text-indigo-400 px-3 py-2 rounded-md text-base font-medium">Home</button>
-                    <!-- Menu Items -->
                     <button onclick="router('education')" class="block w-full text-left hover:text-indigo-400 px-3 py-2 rounded-md text-base font-medium">Education</button>
                     <button onclick="router('projects')" class="block w-full text-left hover:text-indigo-400 px-3 py-2 rounded-md text-base font-medium">Projects</button>
                     <button onclick="router('hackathons')" class="block w-full text-left hover:text-indigo-400 px-3 py-2 rounded-md text-base font-medium">Hackathons</button>
@@ -333,22 +176,22 @@
             </section>
 
             <!-- EDUCATION SECTION -->
-            <section id="education-view" class="view-section hidden max-w-7xl mx-auto px-4 py-12">
+            <section id="education-view" class="view-section hidden-force max-w-7xl mx-auto px-4 py-12">
                 <div class="flex justify-between items-center mb-8">
                     <h2 class="text-4xl font-bold border-l-4 border-indigo-500 pl-4">Education</h2>
                 </div>
                 <div id="education-list" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <!-- Dynamic Content -->
+                    <div class="col-span-full text-center text-gray-500 py-10">No education added yet.</div>
                 </div>
             </section>
 
             <!-- PROJECTS SECTION -->
-            <section id="projects-view" class="view-section hidden max-w-7xl mx-auto px-4 py-12">
+            <section id="projects-view" class="view-section hidden-force max-w-7xl mx-auto px-4 py-12">
                 <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
                     <h2 class="text-4xl font-bold border-l-4 border-indigo-500 pl-4">Projects</h2>
                     <div class="flex gap-2 w-full md:w-auto">
                         <div class="relative flex-grow md:flex-grow-0">
-                            <input type="text" id="search-projects" placeholder="Search projects..." class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 focus:outline-none focus:border-indigo-500">
+                            <input type="text" id="search-projects" placeholder="Search..." class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 focus:outline-none focus:border-indigo-500">
                             <i class="fas fa-search absolute right-3 top-3 text-gray-500"></i>
                         </div>
                         <button onclick="toggleFilter('project-filter-modal')" class="bg-gray-800 px-4 py-2 rounded-lg hover:bg-gray-700"><i class="fas fa-filter"></i></button>
@@ -358,12 +201,12 @@
             </section>
 
             <!-- HACKATHONS SECTION -->
-            <section id="hackathons-view" class="view-section hidden max-w-7xl mx-auto px-4 py-12">
+            <section id="hackathons-view" class="view-section hidden-force max-w-7xl mx-auto px-4 py-12">
                 <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
                     <h2 class="text-4xl font-bold border-l-4 border-indigo-500 pl-4">Hackathons</h2>
                     <div class="flex gap-2 w-full md:w-auto">
                         <div class="relative flex-grow md:flex-grow-0">
-                            <input type="text" id="search-hackathons" placeholder="Search hackathons..." class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 focus:outline-none focus:border-indigo-500">
+                            <input type="text" id="search-hackathons" placeholder="Search..." class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 focus:outline-none focus:border-indigo-500">
                             <i class="fas fa-search absolute right-3 top-3 text-gray-500"></i>
                         </div>
                         <button onclick="toggleFilter('hackathon-filter-modal')" class="bg-gray-800 px-4 py-2 rounded-lg hover:bg-gray-700"><i class="fas fa-filter"></i></button>
@@ -373,7 +216,7 @@
             </section>
 
             <!-- CERTIFICATES SECTION -->
-            <section id="certificates-view" class="view-section hidden max-w-7xl mx-auto px-4 py-12">
+            <section id="certificates-view" class="view-section hidden-force max-w-7xl mx-auto px-4 py-12">
                 <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
                     <h2 class="text-4xl font-bold border-l-4 border-indigo-500 pl-4">Certificates</h2>
                     <div class="flex gap-2 w-full md:w-auto">
@@ -387,14 +230,14 @@
             </section>
 
             <!-- ABOUT ME SECTION -->
-            <section id="about-view" class="view-section hidden max-w-7xl mx-auto px-4 py-12">
+            <section id="about-view" class="view-section hidden-force max-w-7xl mx-auto px-4 py-12">
                 <div class="flex justify-between items-center mb-8">
                     <h2 class="text-4xl font-bold border-l-4 border-indigo-500 pl-4">About Me</h2>
                 </div>
                 <div class="glass rounded-2xl p-8 md:p-12 flex flex-col md:flex-row items-center gap-12">
                     <div class="w-full md:w-1/3 flex justify-center">
                         <div class="relative w-64 h-64 rounded-full overflow-hidden border-4 border-indigo-500 shadow-2xl">
-                            <img id="about-img" src="https://via.placeholder.com/300" alt="Swayam Khangaonkar" class="w-full h-full object-cover">
+                            <img id="about-img" src="https://via.placeholder.com/300" alt="Swayam" class="w-full h-full object-cover">
                         </div>
                     </div>
                     <div class="w-full md:w-2/3">
@@ -407,7 +250,7 @@
             </section>
 
             <!-- ADMIN LOGIN & DASHBOARD -->
-            <section id="admin-view" class="view-section hidden max-w-7xl mx-auto px-4 py-12">
+            <section id="admin-view" class="view-section hidden-force max-w-7xl mx-auto px-4 py-12">
                 <!-- Login Form -->
                 <div id="login-form" class="max-w-md mx-auto glass p-8 rounded-xl shadow-2xl mt-20">
                     <h2 class="text-2xl font-bold mb-6 text-center">Admin Login</h2>
@@ -417,14 +260,13 @@
                 </div>
 
                 <!-- Admin Dashboard -->
-                <div id="admin-dashboard" class="hidden">
+                <div id="admin-dashboard" class="hidden-force">
                     <div class="flex justify-between items-center mb-8">
                         <h2 class="text-3xl font-bold">Admin Dashboard</h2>
                         <button onclick="adminLogout()" class="bg-red-600 px-4 py-2 rounded hover:bg-red-700">Logout</button>
                     </div>
                     
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                        <!-- Visitor Tracker -->
                         <div class="glass p-6 rounded-xl lg:col-span-1">
                             <h3 class="text-xl font-bold mb-4 text-indigo-400">Session Logs</h3>
                             <div class="overflow-y-auto h-96 custom-scrollbar">
@@ -437,12 +279,10 @@
                             </div>
                         </div>
                         
-                        <!-- Content Management Area -->
                         <div class="glass p-6 rounded-xl lg:col-span-2">
                             <h3 class="text-xl font-bold mb-4 text-indigo-400">Content Management</h3>
                             <p class="text-gray-400 mb-4 text-sm">Select a category to Add, Edit, or Delete content.</p>
                             
-                            <!-- Tabs -->
                             <div class="flex space-x-2 mb-6 overflow-x-auto pb-2">
                                 <button onclick="renderAdminList('education')" class="px-4 py-2 bg-gray-800 hover:bg-indigo-600 rounded text-sm whitespace-nowrap transition">Education</button>
                                 <button onclick="renderAdminList('projects')" class="px-4 py-2 bg-gray-800 hover:bg-indigo-600 rounded text-sm whitespace-nowrap transition">Projects</button>
@@ -451,10 +291,7 @@
                                 <button onclick="openEditor('about')" class="px-4 py-2 bg-blue-700 hover:bg-blue-600 rounded text-sm whitespace-nowrap transition">Edit About</button>
                             </div>
 
-                            <!-- Dynamic List Area -->
-                            <div id="admin-list-area" class="space-y-4">
-                                <!-- Injected via JS -->
-                            </div>
+                            <div id="admin-list-area" class="space-y-4"></div>
                         </div>
                     </div>
                 </div>
@@ -492,9 +329,7 @@
         </main>
 
         <!-- MODALS -->
-        
-        <!-- Filter Modal (Projects) -->
-        <div id="project-filter-modal" class="fixed inset-0 bg-black bg-opacity-90 hidden z-50 flex items-center justify-center">
+        <div id="project-filter-modal" class="fixed inset-0 bg-black bg-opacity-90 hidden-force z-50 flex items-center justify-center">
             <div class="bg-gray-900 p-6 rounded-xl w-80 border border-gray-700">
                 <h3 class="text-xl font-bold mb-4">Filter Projects</h3>
                 <div class="space-y-2">
@@ -506,8 +341,7 @@
             </div>
         </div>
 
-        <!-- Filter Modal (Hackathons) -->
-        <div id="hackathon-filter-modal" class="fixed inset-0 bg-black bg-opacity-90 hidden z-50 flex items-center justify-center">
+        <div id="hackathon-filter-modal" class="fixed inset-0 bg-black bg-opacity-90 hidden-force z-50 flex items-center justify-center">
             <div class="bg-gray-900 p-6 rounded-xl w-80 border border-gray-700">
                 <h3 class="text-xl font-bold mb-4">Filter Hackathons</h3>
                 <div class="space-y-2">
@@ -519,16 +353,13 @@
             </div>
         </div>
 
-        <!-- Generic Editor Modal (Add/Edit) -->
-        <div id="editor-modal" class="fixed inset-0 z-[60] hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div id="editor-modal" class="fixed inset-0 z-[60] hidden-force overflow-y-auto">
             <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
                 <div class="fixed inset-0 bg-gray-900 bg-opacity-95 transition-opacity" onclick="closeEditor()"></div>
                 <div class="inline-block align-bottom bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg w-full">
                     <div class="px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                         <h3 class="text-lg leading-6 font-medium text-white mb-4" id="editor-title">Edit Item</h3>
-                        <form id="editor-form" class="space-y-4">
-                            <!-- Dynamic Form Fields injected here -->
-                        </form>
+                        <form id="editor-form" class="space-y-4"></form>
                     </div>
                     <div class="bg-gray-700 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
                         <button type="button" id="save-btn" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm">Save</button>
@@ -538,14 +369,11 @@
             </div>
         </div>
 
-        <!-- Detail Pop-up Modal (Carousel) -->
-        <div id="detail-modal" class="fixed inset-0 z-[70] hidden overflow-y-auto">
+        <div id="detail-modal" class="fixed inset-0 z-[70] hidden-force overflow-y-auto">
             <div class="flex items-center justify-center min-h-screen px-4 text-center">
                 <div class="fixed inset-0 bg-black bg-opacity-95 transition-opacity" onclick="closeDetail()"></div>
                 <div class="relative inline-block bg-gray-900 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:max-w-4xl w-full border border-gray-700">
-                    <div class="p-6" id="detail-content">
-                        <!-- Content Injected via JS -->
-                    </div>
+                    <div class="p-6" id="detail-content"></div>
                     <button onclick="closeDetail()" class="absolute top-4 right-4 text-gray-400 hover:text-white text-2xl">&times;</button>
                 </div>
             </div>
@@ -554,688 +382,378 @@
     </div>
 
     <script>
-        // --- CONFIGURATION ---
-        const apiKey = ""; 
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const firebaseConfig = JSON.parse(__firebase_config || '{}');
-
-        // --- INITIALIZATION ---
-        const app = firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const db = firebase.firestore();
-        
-        let currentUser = null;
+        // --- INIT & LOCAL STORAGE CONFIG ---
+        const DB_KEY = 'swayam_portfolio_db_v2';
         let isAdmin = false;
         let collectionData = {
-            education: [],
-            projects: [],
-            hackathons: [],
-            certificates: [],
-            about: {}
+            education: [], projects: [], hackathons: [], certificates: [], 
+            about: { text: "Welcome to my portfolio", photos: [] }
         };
 
-        // --- AUTHENTICATION & STARTUP ---
-        const initAuth = async () => {
-            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                await auth.signInWithCustomToken(__initial_auth_token);
-            } else {
-                await auth.signInAnonymously();
-            }
-        };
-
-        // IMMEDIATE ANIMATION START (Before Window Load)
-        // Use DOMContentLoaded to start visual immediately
+        // --- STARTUP LOGIC ---
         document.addEventListener('DOMContentLoaded', () => {
             generateStars();
-            startAnimation(); 
+            startAnimation();
+            loadData();
         });
 
-        window.onload = async function() {
-            await initAuth();
-            auth.onAuthStateChanged(async (user) => {
-                currentUser = user;
-                if (user) {
-                    setupListeners();
-                    logVisitor(); 
-                }
-            });
-        };
-
-        // --- ANIMATION LOGIC (TIME-BASED FIX) ---
         function generateStars() {
-            const starfield = document.getElementById('starfield');
-            if(!starfield) return;
-            starfield.innerHTML = '';
+            const s = document.getElementById('starfield');
+            if(!s) return;
             for(let i=0; i<50; i++) {
-                const star = document.createElement('div');
-                star.className = 'star';
-                const size = Math.random() * 3 + 1;
-                star.style.width = `${size}px`;
-                star.style.height = `${size}px`;
-                star.style.left = `${Math.random() * 100}%`;
-                star.style.top = `${Math.random() * 100}%`;
-                star.style.animationDuration = `${Math.random() * 2 + 1}s`;
-                star.style.animationDelay = `${Math.random()}s`;
-                starfield.appendChild(star);
+                const d = document.createElement('div');
+                d.className = 'star';
+                d.style.width = (Math.random()*3+1)+'px';
+                d.style.height = d.style.width;
+                d.style.left = Math.random()*100+'%';
+                d.style.top = Math.random()*100+'%';
+                d.style.animationDuration = (Math.random()*2+1)+'s';
+                s.appendChild(d);
             }
         }
 
         function startAnimation() {
-            const loadingBar = document.getElementById('loading-bar');
-            const statusText = document.getElementById('status-text');
-            const loadingScreen = document.getElementById('loading-screen');
-            const appDiv = document.getElementById('app');
-            const whiteFlash = document.getElementById('white-flash');
+            const bar = document.getElementById('loading-bar');
+            const stat = document.getElementById('status-text');
             const rocket = document.querySelector('.rocket-container');
+            const flash = document.getElementById('white-flash');
+            const screen = document.getElementById('loading-screen');
+            const app = document.getElementById('app');
 
-            const duration = 5000; // Exactly 5000ms
-            const startTime = Date.now();
+            let start = Date.now();
+            let dur = 5000;
 
-            function update() {
-                const now = Date.now();
-                const elapsed = now - startTime;
-                let percentage = (elapsed / duration) * 100;
-
-                if (percentage > 100) percentage = 100;
-
-                if(loadingBar) loadingBar.style.width = percentage + '%';
-
-                if (statusText) {
-                    if (percentage > 20 && percentage < 40) statusText.innerText = "FUELING ENGINES...";
-                    else if (percentage > 40 && percentage < 60) statusText.innerText = "CALIBRATING SENSORS...";
-                    else if (percentage > 60 && percentage < 80) statusText.innerText = "IGNITION SEQUENCE START...";
-                    else if (percentage > 80) statusText.innerText = "READY FOR LIFTOFF...";
+            function frame() {
+                let now = Date.now();
+                let pct = Math.min(100, ((now - start) / dur) * 100);
+                
+                if(bar) bar.style.width = pct + '%';
+                
+                if(stat) {
+                    if(pct < 30) stat.innerText = "FUELING...";
+                    else if(pct < 60) stat.innerText = "SYSTEM CHECK...";
+                    else if(pct < 90) stat.innerText = "IGNITION...";
+                    else stat.innerText = "READY...";
                 }
 
-                if (percentage < 100) {
-                    requestAnimationFrame(update);
+                if(pct < 100) {
+                    requestAnimationFrame(frame);
                 } else {
-                    // Complete
+                    if(stat) stat.innerText = "LIFTOFF!";
                     if(rocket) rocket.classList.add('launching');
-                    if(statusText) statusText.innerText = "LIFTOFF!";
                     
                     setTimeout(() => {
-                        if(whiteFlash) whiteFlash.style.opacity = '1';
-                        
+                        if(flash) flash.style.opacity = '1';
                         setTimeout(() => {
-                            if(loadingScreen) loadingScreen.style.display = 'none';
-                            if(appDiv) appDiv.classList.remove('hidden');
-                            if(whiteFlash) whiteFlash.style.opacity = '0';
-                            setTimeout(() => { if(whiteFlash) whiteFlash.style.display = 'none'; }, 1000);
-                        }, 2000); 
-                    }, 1200); 
+                            if(screen) screen.style.display = 'none';
+                            if(app) app.classList.remove('hidden-force');
+                            if(flash) flash.style.opacity = '0';
+                            setTimeout(() => { if(flash) flash.style.display = 'none'; }, 1000);
+                        }, 2000);
+                    }, 1200);
                 }
             }
-            requestAnimationFrame(update);
+            requestAnimationFrame(frame);
         }
 
-        // --- PDF RESUME DOWNLOAD ---
-        function downloadResume() {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-            doc.setFont("helvetica", "bold");
-            doc.setFontSize(22);
-            doc.text("SWAYAM KHANGAONKAR", 20, 20);
-            doc.setFontSize(12);
-            doc.setFont("helvetica", "normal");
-            doc.text("Portfolio: showcase.com", 20, 30);
-            doc.line(20, 35, 190, 35);
-            doc.setFont("helvetica", "bold");
-            doc.text("EDUCATION", 20, 45);
-            doc.setFont("helvetica", "normal");
-            doc.text("Visit showcase.com to see detailed educational background.", 20, 52);
-            doc.setFont("helvetica", "bold");
-            doc.text("PROJECTS", 20, 65);
-            doc.setFont("helvetica", "normal");
-            doc.text("Projects including AI/ML, Blockchain, and Web Dev are available online.", 20, 72);
-            doc.setFont("helvetica", "bold");
-            doc.text("HACKATHONS", 20, 85);
-            doc.setFont("helvetica", "normal");
-            doc.text("A history of hackathon participation is documented on the portfolio.", 20, 92);
-            doc.setFont("helvetica", "bold");
-            doc.text("CONTACT", 20, 105);
-            doc.setFont("helvetica", "normal");
-            doc.text("Instagram: kswayammmm", 20, 112);
-            doc.save("Swayam_Khangaonkar_Resume.pdf");
-        }
-
-        // --- VISITOR TRACKING (Back to Firebase) ---
-        async function logVisitor() {
-            if (isAdmin) return; 
-            if (!currentUser) return;
-            try {
-                if(sessionStorage.getItem('visited')) return;
-                await db.collection('artifacts').doc(appId).collection('public').doc('data').collection('visitors').add({
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                    userAgent: navigator.userAgent,
-                    platform: navigator.platform
-                });
-                sessionStorage.setItem('visited', 'true');
-            } catch (e) { console.error("Log error", e); }
-        }
-
-        // --- DATA FETCHING (Back to Firebase) ---
-        function setupListeners() {
-            const collections = ['education', 'projects', 'hackathons', 'certificates', 'about'];
-            collections.forEach(col => {
-                db.collection('artifacts').doc(appId).collection('public').doc('data').collection(col)
-                  .onSnapshot(snapshot => {
-                      if (col === 'about') {
-                          if (!snapshot.empty) {
-                              const data = snapshot.docs[0].data();
-                              document.getElementById('about-text').innerText = data.text || "Welcome to my profile.";
-                              const photo = (data.photos && data.photos.length > 0) ? data.photos[0] : (data.photoUrl || 'https://via.placeholder.com/300');
-                              document.getElementById('about-img').src = photo;
-                              document.getElementById('about-view').dataset.docId = snapshot.docs[0].id;
-                          }
-                      } else {
-                          collectionData[col] = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                          renderCollection(col);
-                          // If admin view is active, update list
-                          if(isAdmin && document.getElementById('admin-list-area').offsetParent !== null) {
-                              const currentTab = document.querySelector('#admin-dashboard .bg-blue-700')?.innerText.toLowerCase() || '';
-                              // Simplified logic to just refresh the active list if we know which one
-                              // For now, user clicks button to refresh, or we could store active tab state.
-                              // Let's just re-render if "education" was default
-                          }
-                      }
-                  }, err => console.error(`Error fetching ${col}`, err));
-            });
-            if (isAdmin) setupVisitorListener();
-        }
-
-        function setupVisitorListener() {
-            db.collection('artifacts').doc(appId).collection('public').doc('data').collection('visitors')
-                .orderBy('timestamp', 'desc').limit(50)
-                .onSnapshot(snapshot => {
-                    const tbody = document.getElementById('visitor-log-body');
-                    tbody.innerHTML = '';
-                    snapshot.forEach(doc => {
-                        const data = doc.data();
-                        const time = data.timestamp ? data.timestamp.toDate().toLocaleString() : 'Just now';
-                        tbody.innerHTML += `<tr class="border-b border-gray-800"><td class="py-2">${time}</td><td class="py-2 text-xs truncate max-w-xs">${data.userAgent}</td></tr>`;
-                    });
-                });
-        }
-
-        // --- RENDERING ---
-        function renderCollection(type) {
-            const container = document.getElementById(`${type}-list`);
-            if(!container) return;
-            container.innerHTML = '';
-            let data = collectionData[type] || [];
-
-            if (type === 'projects') data = filterProjects(data);
-            if (type === 'hackathons') data = filterHackathons(data);
-            if (type === 'certificates') data = searchFilter(data, 'search-certificates', ['title', 'issuer']);
-
-            if(data.length === 0) {
-                container.innerHTML = '<div class="col-span-full text-center text-gray-500">No items found.</div>';
-                return;
+        // --- DATA LOGIC (LOCAL STORAGE) ---
+        function loadData() {
+            const raw = localStorage.getItem(DB_KEY);
+            if(raw) {
+                try { collectionData = JSON.parse(raw); } catch(e){ console.error(e); }
             }
-
-            data.forEach(item => {
-                let cardHTML = '';
-                const coverImg = (item.photos && item.photos.length > 0) ? item.photos[0] : (item.imageUrl || null);
-                const imgHtml = coverImg ? `<div class="h-48 w-full mb-4 rounded-lg overflow-hidden"><img src="${coverImg}" class="w-full h-full object-cover"></div>` : '';
-
-                if (type === 'education') {
-                    cardHTML = `
-                        <div class="glass p-6 rounded-xl hover:bg-gray-800 transition cursor-pointer relative group" onclick="showDetails('education', '${item.id}')">
-                            ${imgHtml}
-                            <h3 class="text-xl font-bold text-indigo-400">${item.degree || 'Degree'}</h3>
-                            <p class="text-lg font-semibold">${item.school || 'Institution'}</p>
-                            <p class="text-gray-400 text-sm mb-2">${item.year || 'Year'}</p>
-                            <p class="text-gray-300 line-clamp-2">${item.description || ''}</p>
-                            <p class="mt-2 text-xs text-indigo-300">Click for details & photos</p>
-                        </div>
-                    `;
-                } else if (type === 'projects') {
-                    cardHTML = `
-                        <div class="glass p-6 rounded-xl hover:transform hover:-translate-y-1 transition relative">
-                            ${imgHtml}
-                            <h3 class="text-xl font-bold text-white mb-2">${item.title || 'Project'}</h3>
-                            <div class="flex gap-2 mb-3">
-                                ${(item.tags || '').split(',').map(t => `<span class="text-xs bg-indigo-900 px-2 py-1 rounded text-indigo-200">${t.trim()}</span>`).join('')}
-                            </div>
-                            <p class="text-gray-400 text-sm mb-4 line-clamp-3">${item.description || ''}</p>
-                            <button onclick="showDetails('projects', '${item.id}')" class="text-indigo-400 hover:text-white text-sm font-bold">View Details <i class="fas fa-arrow-right"></i></button>
-                        </div>
-                    `;
-                } else if (type === 'hackathons') {
-                    const locationDisplay = item.mode === 'online' ? 
-                        '<span class="text-green-400"><i class="fas fa-globe"></i> Online</span>' : 
-                        `<span class="text-yellow-400"><i class="fas fa-map-marker-alt"></i> ${item.location || 'Collage'}</span>`;
-                    
-                    cardHTML = `
-                        <div class="glass p-6 rounded-xl relative">
-                            ${imgHtml}
-                            <div class="flex justify-between items-start mb-2">
-                                <h3 class="text-xl font-bold">${item.name || 'Hackathon'}</h3>
-                                <span class="text-xs border border-gray-600 px-2 py-1 rounded uppercase">${item.mode || 'Offline'}</span>
-                            </div>
-                            <div class="mb-3 text-sm">${locationDisplay}</div>
-                            <p class="text-gray-400 text-sm mb-3">${item.description || ''}</p>
-                             <button onclick="showDetails('hackathons', '${item.id}')" class="text-indigo-400 hover:text-white text-sm font-bold">View Details <i class="fas fa-arrow-right"></i></button>
-                        </div>
-                    `;
-                } else if (type === 'certificates') {
-                     cardHTML = `
-                        <div class="glass p-4 rounded-xl relative hover:bg-gray-800 transition">
-                            <div class="h-32 bg-gray-800 rounded mb-3 overflow-hidden">
-                                ${coverImg ? `<img src="${coverImg}" class="w-full h-full object-cover" onclick="window.open('${coverImg}')">` : '<div class="w-full h-full flex items-center justify-center text-gray-600"><i class="fas fa-certificate fa-2x"></i></div>'}
-                            </div>
-                            <h4 class="font-bold text-white truncate">${item.title || 'Certificate'}</h4>
-                            <p class="text-xs text-gray-400">${item.issuer || 'Issuer'}</p>
-                        </div>
-                    `;
-                }
-                container.innerHTML += cardHTML;
-            });
+            renderAll();
         }
 
-        // --- SEARCH & FILTER LOGIC ---
-        function filterProjects(data) {
-            const search = document.getElementById('search-projects').value.toLowerCase();
-            const checkboxes = document.querySelectorAll('#project-filter-modal input[type="checkbox"]:checked');
-            const selectedTags = Array.from(checkboxes).map(cb => cb.value.toLowerCase());
-            return data.filter(item => {
-                const matchesSearch = (item.title || '').toLowerCase().includes(search);
-                const itemTags = (item.tags || '').toLowerCase();
-                const matchesTags = selectedTags.length === 0 || selectedTags.some(tag => itemTags.includes(tag));
-                return matchesSearch && matchesTags;
-            });
+        function saveData() {
+            localStorage.setItem(DB_KEY, JSON.stringify(collectionData));
+            renderAll();
         }
-        function filterHackathons(data) {
-            const search = document.getElementById('search-hackathons').value.toLowerCase();
-            const mode = document.querySelector('input[name="h-mode"]:checked').value;
-            return data.filter(item => {
-                const matchesSearch = (item.name || '').toLowerCase().includes(search);
-                const matchesMode = mode === 'all' || (item.mode || 'offline').toLowerCase() === mode;
-                return matchesSearch && matchesMode;
-            });
-        }
-        function searchFilter(data, inputId, fields) {
-            const search = document.getElementById(inputId).value.toLowerCase();
-            return data.filter(item => fields.some(field => (item[field] || '').toLowerCase().includes(search)));
-        }
-        document.getElementById('search-projects').addEventListener('input', () => renderCollection('projects'));
-        document.getElementById('search-hackathons').addEventListener('input', () => renderCollection('hackathons'));
-        document.getElementById('search-certificates').addEventListener('input', () => renderCollection('certificates'));
-        function toggleFilter(modalId) { document.getElementById(modalId).classList.toggle('hidden'); }
-        function applyProjectFilter() { renderCollection('projects'); }
-        function applyHackathonFilter() { renderCollection('hackathons'); }
 
         // --- ROUTING ---
-        function router(viewId) {
-            document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
-            document.getElementById('mobile-menu').classList.add('hidden');
-            if (viewId === 'admin') {
-                document.getElementById('admin-view').classList.remove('hidden');
-                if (isAdmin) {
-                    document.getElementById('login-form').classList.add('hidden');
-                    document.getElementById('admin-dashboard').classList.remove('hidden');
+        function router(view) {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden-force'));
+            document.getElementById('mobile-menu').classList.add('hidden'); // use normal hidden for menu logic usually
+            document.getElementById('mobile-menu').style.display = 'none'; // force close
+
+            if(view === 'admin') {
+                document.getElementById('admin-view').classList.remove('hidden-force');
+                if(isAdmin) {
+                    document.getElementById('login-form').classList.add('hidden-force');
+                    document.getElementById('admin-dashboard').classList.remove('hidden-force');
+                    renderAdminList('education');
                 } else {
-                    document.getElementById('login-form').classList.remove('hidden');
-                    document.getElementById('admin-dashboard').classList.add('hidden');
+                    document.getElementById('login-form').classList.remove('hidden-force');
+                    document.getElementById('admin-dashboard').classList.add('hidden-force');
                 }
             } else {
-                document.getElementById(`${viewId}-view`).classList.remove('hidden');
+                const el = document.getElementById(view+'-view');
+                if(el) el.classList.remove('hidden-force');
             }
             window.scrollTo(0,0);
         }
-        function toggleMobileMenu() { document.getElementById('mobile-menu').classList.toggle('hidden'); }
 
-        // --- ADMIN ACTIONS ---
+        function toggleMobileMenu() {
+            const m = document.getElementById('mobile-menu');
+            if(m.style.display === 'block') m.style.display = 'none';
+            else m.style.display = 'block';
+        }
+
+        // --- AUTH ---
         function adminLogin() {
             const u = document.getElementById('admin-user').value;
             const p = document.getElementById('admin-pass').value;
-            if (u === 'admin' && p === 'admin123') {
+            if(u === 'admin' && p === 'admin123') {
                 isAdmin = true;
                 document.getElementById('nav-admin-btn').classList.add('text-green-400');
                 router('admin');
-                renderAdminList('education'); // Default view
-                setupVisitorListener();
-            } else { alert('Invalid credentials'); }
+            } else { alert('Invalid Credentials'); }
         }
 
         function adminLogout() {
             isAdmin = false;
             document.getElementById('nav-admin-btn').classList.remove('text-green-400');
-            document.getElementById('admin-user').value = '';
-            document.getElementById('admin-pass').value = '';
             router('home');
         }
-        
-        // --- ADMIN LIST MANAGEMENT ---
+
+        // --- RENDER ---
+        function renderAll() {
+            ['education', 'projects', 'hackathons', 'certificates'].forEach(renderList);
+            
+            // About
+            const abt = collectionData.about || {};
+            document.getElementById('about-text').innerText = abt.text || "Welcome";
+            const pic = (abt.photos && abt.photos.length) ? abt.photos[0] : "https://via.placeholder.com/300";
+            document.getElementById('about-img').src = pic;
+        }
+
+        function renderList(type) {
+            const con = document.getElementById(type+'-list');
+            if(!con) return;
+            con.innerHTML = '';
+            
+            let items = collectionData[type] || [];
+            // Simple filters could go here
+            if(type === 'projects') items = filterProjects(items);
+            if(type === 'hackathons') items = filterHackathons(items);
+
+            if(items.length === 0) {
+                con.innerHTML = '<div class="col-span-full text-center text-gray-500">No items added yet.</div>';
+                return;
+            }
+
+            items.forEach(item => {
+                let html = '';
+                const img = (item.photos && item.photos.length) ? item.photos[0] : null;
+                const imgDiv = img ? `<div class="h-48 w-full mb-4 rounded-lg overflow-hidden"><img src="${img}" class="w-full h-full object-cover"></div>` : '';
+
+                if(type === 'education') {
+                    html = `<div class="glass p-6 rounded-xl hover:bg-gray-800 transition cursor-pointer" onclick="showDetails('education','${item.id}')">
+                        ${imgDiv}
+                        <h3 class="text-xl font-bold text-indigo-400">${item.degree}</h3>
+                        <p class="text-lg font-semibold">${item.school}</p>
+                        <p class="text-gray-400 text-sm">${item.year}</p>
+                    </div>`;
+                } else if(type === 'projects') {
+                    html = `<div class="glass p-6 rounded-xl hover:-translate-y-1 transition">
+                        ${imgDiv}
+                        <h3 class="text-xl font-bold text-white">${item.title}</h3>
+                        <div class="flex gap-2 my-2">${(item.tags||'').split(',').map(t=>`<span class="text-xs bg-indigo-900 px-2 py-1 rounded">${t}</span>`).join('')}</div>
+                        <button onclick="showDetails('projects','${item.id}')" class="text-indigo-400 text-sm font-bold mt-2">View Details</button>
+                    </div>`;
+                } else if(type === 'hackathons') {
+                    html = `<div class="glass p-6 rounded-xl">
+                        ${imgDiv}
+                        <div class="flex justify-between"><h3 class="text-xl font-bold">${item.name}</h3><span class="text-xs border border-gray-600 px-2 rounded">${item.mode}</span></div>
+                        <button onclick="showDetails('hackathons','${item.id}')" class="text-indigo-400 text-sm font-bold mt-2">View Details</button>
+                    </div>`;
+                } else if(type === 'certificates') {
+                    html = `<div class="glass p-4 rounded-xl">
+                        <div class="h-32 bg-gray-800 rounded mb-3 overflow-hidden">${imgDiv}</div>
+                        <h4 class="font-bold truncate">${item.title}</h4>
+                        <p class="text-xs text-gray-400">${item.issuer}</p>
+                    </div>`;
+                }
+                con.innerHTML += html;
+            });
+        }
+
+        // --- ADMIN LIST ---
         function renderAdminList(type) {
             const area = document.getElementById('admin-list-area');
-            area.innerHTML = '';
-            
-            // Add Button (String-based generation to guarantee event binding)
-            let html = `
-                <button onclick="openEditor('${type}')" class="w-full p-3 bg-green-700 hover:bg-green-600 rounded flex justify-between items-center font-bold mb-4 cursor-pointer">
-                    <span>Add New ${type.charAt(0).toUpperCase() + type.slice(1)}</span> <i class="fas fa-plus"></i>
+            area.innerHTML = `
+                <button onclick="openEditor('${type}')" class="w-full p-3 bg-green-700 hover:bg-green-600 rounded flex justify-between items-center font-bold mb-4">
+                    <span>Add New ${type}</span> <i class="fas fa-plus"></i>
                 </button>
             `;
-
-            // List Items
-            const items = collectionData[type] || [];
-            if (items.length === 0) {
-                html += '<div class="text-gray-500 text-center py-4">No items found. Add one!</div>';
-            } else {
-                items.forEach(item => {
-                    let title = 'Item';
-                    if(type==='education') title = item.school || 'Untitled';
-                    else if(type==='projects' || type==='certificates') title = item.title || 'Untitled';
-                    else if(type==='hackathons') title = item.name || 'Untitled';
-                    
-                    // Escape quotes for onclick
-                    const safeId = item.id; 
-
-                    html += `
-                        <div class="bg-gray-800 p-4 rounded flex justify-between items-center border border-gray-700">
-                            <span class="truncate font-medium pr-4">${title}</span>
-                            <div class="flex space-x-2">
-                                <button onclick="openEditor('${type}', '${safeId}')" class="p-2 bg-blue-600 hover:bg-blue-500 rounded text-white"><i class="fas fa-edit"></i></button>
-                                <button onclick="deleteItem('${type}', '${safeId}')" class="p-2 bg-red-600 hover:bg-red-500 rounded text-white"><i class="fas fa-trash"></i></button>
-                            </div>
-                        </div>
-                    `;
-                });
-            }
-            area.innerHTML = html;
+            
+            (collectionData[type] || []).forEach(item => {
+                let label = item.school || item.title || item.name || 'Item';
+                const div = document.createElement('div');
+                div.className = "bg-gray-800 p-4 rounded flex justify-between items-center border border-gray-700 mb-2";
+                div.innerHTML = `
+                    <span class="truncate font-medium pr-4">${label}</span>
+                    <div class="flex space-x-2">
+                        <button onclick="openEditor('${type}','${item.id}')" class="p-2 bg-blue-600 rounded text-white"><i class="fas fa-edit"></i></button>
+                        <button onclick="deleteItem('${type}','${item.id}')" class="p-2 bg-red-600 rounded text-white"><i class="fas fa-trash"></i></button>
+                    </div>`;
+                area.appendChild(div);
+            });
         }
 
-        // --- EDITOR MODAL LOGIC & IMAGE HANDLING ---
-        let currentEditType = null;
-        let currentEditId = null;
-        let tempPhotos = []; 
+        // --- EDITOR ---
+        let currentType = null, currentId = null, tempPhotos = [];
 
         function openEditor(type, id = null) {
-            currentEditType = type;
-            currentEditId = id;
-            tempPhotos = []; // Reset
-            
+            currentType = type; currentId = id; tempPhotos = [];
             const modal = document.getElementById('editor-modal');
             const form = document.getElementById('editor-form');
-            const title = document.getElementById('editor-title');
-            
-            title.innerText = id ? `Edit ${type}` : `Add New ${type}`;
+            document.getElementById('editor-title').innerText = id ? `Edit ${type}` : `Add New ${type}`;
             form.innerHTML = '';
 
-            let data = {};
-            if (id && type !== 'about') {
-                data = collectionData[type].find(i => i.id === id) || {};
-                tempPhotos = data.photos || (data.imageUrl ? [data.imageUrl] : []);
-            } else if (type === 'about') {
-                 // Since 'about' is a single doc but we need to edit it
-                 data = {
-                     text: document.getElementById('about-text').innerText,
-                     photos: [document.getElementById('about-img').src]
-                 };
-                 tempPhotos = data.photos;
+            let d = {};
+            if(id && type!=='about') d = collectionData[type].find(i=>i.id===id) || {};
+            else if(type==='about') d = collectionData.about || {};
+            
+            if(d.photos) tempPhotos = [...d.photos];
+
+            // Fields
+            let fields = '';
+            if(type==='education') {
+                fields = `<input id="e-school" value="${d.school||''}" placeholder="School" class="w-full bg-gray-700 p-2 rounded mb-2">
+                          <input id="e-degree" value="${d.degree||''}" placeholder="Degree" class="w-full bg-gray-700 p-2 rounded mb-2">
+                          <input id="e-year" value="${d.year||''}" placeholder="Year" class="w-full bg-gray-700 p-2 rounded mb-2">
+                          <textarea id="e-desc" placeholder="Description" class="w-full bg-gray-700 p-2 rounded h-24">${d.description||''}</textarea>`;
+            } else if(type==='projects') {
+                fields = `<input id="p-title" value="${d.title||''}" placeholder="Title" class="w-full bg-gray-700 p-2 rounded mb-2">
+                          <textarea id="p-desc" placeholder="Description" class="w-full bg-gray-700 p-2 rounded h-24">${d.description||''}</textarea>
+                          <input id="p-tags" value="${d.tags||''}" placeholder="Tags" class="w-full bg-gray-700 p-2 rounded mb-2">
+                          <input id="p-link" value="${d.link||''}" placeholder="Link" class="w-full bg-gray-700 p-2 rounded mb-2">`;
+            } else if(type==='hackathons') {
+                fields = `<input id="h-name" value="${d.name||''}" placeholder="Name" class="w-full bg-gray-700 p-2 rounded mb-2">
+                          <textarea id="h-desc" placeholder="Description" class="w-full bg-gray-700 p-2 rounded h-24">${d.description||''}</textarea>
+                          <input id="h-mode" value="${d.mode||'offline'}" placeholder="Mode (online/offline)" class="w-full bg-gray-700 p-2 rounded mb-2">
+                          <input id="h-loc" value="${d.location||''}" placeholder="Location" class="w-full bg-gray-700 p-2 rounded mb-2">`;
+            } else if(type==='certificates') {
+                fields = `<input id="c-title" value="${d.title||''}" placeholder="Title" class="w-full bg-gray-700 p-2 rounded mb-2">
+                          <input id="c-issuer" value="${d.issuer||''}" placeholder="Issuer" class="w-full bg-gray-700 p-2 rounded mb-2">`;
+            } else if(type==='about') {
+                fields = `<textarea id="a-text" class="w-full bg-gray-700 p-2 h-48">${d.text||''}</textarea>`;
             }
 
-            // Common Image Input Helper
-            const imgInputHtml = `
-                <label class="block text-sm text-gray-400 mb-1">Upload Photos (Max 15)</label>
-                <input type="file" id="in-files" multiple accept="image/*" onchange="handleFileSelect(this)" class="w-full bg-gray-700 p-2 rounded text-white mb-2">
-                <div id="preview-area" class="flex flex-wrap gap-2 mb-2"></div>
-                <input type="text" id="in-urls" placeholder="Or paste Image URLs (comma separated)" class="w-full bg-gray-700 p-2 rounded text-white text-xs mb-2">
+            form.innerHTML = fields + `
+                <div class="mt-4 border-t border-gray-700 pt-4">
+                    <label>Photos (Max 15)</label>
+                    <input type="file" multiple accept="image/*" onchange="handleFiles(this)" class="w-full bg-gray-700 p-2 mt-1">
+                    <div id="preview-area" class="flex gap-2 mt-2 flex-wrap"></div>
+                </div>
             `;
-
-            if (type === 'education') {
-                form.innerHTML = `
-                    <input type="text" id="in-school" placeholder="School/College Name" value="${data.school||''}" class="w-full bg-gray-700 p-2 rounded text-white mb-2">
-                    <input type="text" id="in-degree" placeholder="Degree" value="${data.degree||''}" class="w-full bg-gray-700 p-2 rounded text-white mb-2">
-                    <input type="text" id="in-year" placeholder="Year" value="${data.year||''}" class="w-full bg-gray-700 p-2 rounded text-white mb-2">
-                    <textarea id="in-desc" placeholder="Description" class="w-full bg-gray-700 p-2 rounded text-white mb-2 h-24">${data.description||''}</textarea>
-                    ${imgInputHtml}
-                `;
-            } else if (type === 'projects') {
-                form.innerHTML = `
-                    <input type="text" id="in-title" placeholder="Project Title" value="${data.title||''}" class="w-full bg-gray-700 p-2 rounded text-white mb-2">
-                    <textarea id="in-desc" placeholder="Details" class="w-full bg-gray-700 p-2 rounded text-white mb-2 h-32">${data.description||''}</textarea>
-                    <input type="text" id="in-tags" placeholder="Tags" value="${data.tags||''}" class="w-full bg-gray-700 p-2 rounded text-white mb-2">
-                    <input type="text" id="in-link" placeholder="Link" value="${data.link||''}" class="w-full bg-gray-700 p-2 rounded text-white mb-2">
-                    ${imgInputHtml}
-                `;
-            } else if (type === 'hackathons') {
-                const isOnline = data.mode === 'online';
-                form.innerHTML = `
-                    <input type="text" id="in-name" placeholder="Hackathon Name" value="${data.name||''}" class="w-full bg-gray-700 p-2 rounded text-white mb-2">
-                    <textarea id="in-desc" placeholder="Description" class="w-full bg-gray-700 p-2 rounded text-white mb-2 h-24">${data.description||''}</textarea>
-                    <input type="text" id="in-host" placeholder="Host Link" value="${data.hostLink||''}" class="w-full bg-gray-700 p-2 rounded text-white mb-2">
-                    <select id="in-mode" onchange="toggleLocInput()" class="w-full bg-gray-700 p-2 rounded text-white mb-2">
-                        <option value="offline" ${!isOnline?'selected':''}>Offline</option>
-                        <option value="online" ${isOnline?'selected':''}>Online</option>
-                    </select>
-                    <div id="loc-wrapper" class="${isOnline?'hidden':''}">
-                        <input type="text" id="in-loc" placeholder="College Name" value="${data.location||''}" class="w-full bg-gray-700 p-2 rounded text-white mb-2">
-                    </div>
-                    ${imgInputHtml}
-                `;
-            } else if (type === 'certificates') {
-                form.innerHTML = `
-                    <input type="text" id="in-title" placeholder="Certificate Name" value="${data.title||''}" class="w-full bg-gray-700 p-2 rounded text-white mb-2">
-                    <input type="text" id="in-issuer" placeholder="Issuer" value="${data.issuer||''}" class="w-full bg-gray-700 p-2 rounded text-white mb-2">
-                    ${imgInputHtml}
-                `;
-            } else if (type === 'about') {
-                form.innerHTML = `
-                    <textarea id="in-text" placeholder="About Me Text" class="w-full bg-gray-700 p-2 rounded text-white mb-2 h-64">${data.text||''}</textarea>
-                    ${imgInputHtml}
-                `;
-            }
-
+            
             updatePreview();
-            document.getElementById('save-btn').onclick = saveData;
-            document.getElementById('editor-modal').classList.remove('hidden');
+            document.getElementById('save-btn').onclick = saveItem;
+            modal.classList.remove('hidden-force');
         }
 
-        function toggleLocInput() {
-            const mode = document.getElementById('in-mode').value;
-            const wrapper = document.getElementById('loc-wrapper');
-            if (mode === 'online') wrapper.classList.add('hidden'); else wrapper.classList.remove('hidden');
-        }
+        function closeEditor() { document.getElementById('editor-modal').classList.add('hidden-force'); }
 
-        function closeEditor() { document.getElementById('editor-modal').classList.add('hidden'); }
-
-        // Handle Files
-        function handleFileSelect(input) {
-            if (input.files) {
-                const files = Array.from(input.files);
-                if (tempPhotos.length + files.length > 15) {
-                    alert("Max 15 photos allowed");
-                    return;
-                }
-                files.forEach(file => {
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                        // Basic Compression via Canvas
-                        const img = new Image();
-                        img.onload = () => {
-                            const canvas = document.createElement('canvas');
-                            const MAX_WIDTH = 600; 
-                            const scaleSize = MAX_WIDTH / img.width;
-                            canvas.width = MAX_WIDTH;
-                            canvas.height = img.height * scaleSize;
-                            const ctx = canvas.getContext('2d');
-                            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                            const dataUrl = canvas.toDataURL('image/jpeg', 0.6); 
-                            tempPhotos.push(dataUrl);
-                            updatePreview();
-                        }
-                        img.src = e.target.result;
-                    };
-                    reader.readAsDataURL(file);
-                });
-            }
+        function handleFiles(input) {
+            Array.from(input.files).forEach(f => {
+                const r = new FileReader();
+                r.onload = e => { tempPhotos.push(e.target.result); updatePreview(); };
+                r.readAsDataURL(f);
+            });
         }
 
         function updatePreview() {
-            const area = document.getElementById('preview-area');
-            if(area) {
-                area.innerHTML = tempPhotos.map((src, idx) => `
-                    <div class="relative w-16 h-16">
-                        <img src="${src}" class="w-full h-full object-cover rounded">
-                        <button onclick="removePhoto(${idx})" class="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-4 h-4 text-xs flex items-center justify-center">&times;</button>
-                    </div>
-                `).join('');
-            }
+            const div = document.getElementById('preview-area');
+            div.innerHTML = tempPhotos.map((p,i) => `<img src="${p}" class="w-16 h-16 object-cover rounded cursor-pointer border-red-500 border hover:opacity-50" onclick="tempPhotos.splice(${i},1);updatePreview()">`).join('');
         }
 
-        window.removePhoto = function(idx) {
-            tempPhotos.splice(idx, 1);
-            updatePreview();
-        }
-
-        async function saveData() {
-            if (!currentUser) return;
-            const type = currentEditType;
-            const id = currentEditId;
+        function saveItem() {
+            let newItem = { id: currentId || Date.now().toString(), photos: tempPhotos };
             
-            const urlInput = document.getElementById('in-urls');
-            if (urlInput && urlInput.value.trim()) {
-                const urls = urlInput.value.split(',').map(s => s.trim()).filter(s => s);
-                if (tempPhotos.length + urls.length <= 15) {
-                    tempPhotos = tempPhotos.concat(urls);
-                }
+            if(currentType === 'education') {
+                newItem.school = document.getElementById('e-school').value;
+                newItem.degree = document.getElementById('e-degree').value;
+                newItem.year = document.getElementById('e-year').value;
+                newItem.description = document.getElementById('e-desc').value;
+            } else if(currentType === 'projects') {
+                newItem.title = document.getElementById('p-title').value;
+                newItem.description = document.getElementById('p-desc').value;
+                newItem.tags = document.getElementById('p-tags').value;
+                newItem.link = document.getElementById('p-link').value;
+            } else if(currentType === 'hackathons') {
+                newItem.name = document.getElementById('h-name').value;
+                newItem.description = document.getElementById('h-desc').value;
+                newItem.mode = document.getElementById('h-mode').value;
+                newItem.location = document.getElementById('h-loc').value;
+            } else if(currentType === 'certificates') {
+                newItem.title = document.getElementById('c-title').value;
+                newItem.issuer = document.getElementById('c-issuer').value;
+            } else if(currentType === 'about') {
+                collectionData.about = { text: document.getElementById('a-text').value, photos: tempPhotos };
+                saveData(); closeEditor(); return;
             }
 
-            let payload = { photos: tempPhotos }; 
-
-            if (type === 'education') {
-                Object.assign(payload, {
-                    school: document.getElementById('in-school').value,
-                    degree: document.getElementById('in-degree').value,
-                    year: document.getElementById('in-year').value,
-                    description: document.getElementById('in-desc').value
-                });
-            } else if (type === 'projects') {
-                Object.assign(payload, {
-                    title: document.getElementById('in-title').value,
-                    description: document.getElementById('in-desc').value,
-                    tags: document.getElementById('in-tags').value,
-                    link: document.getElementById('in-link').value
-                });
-            } else if (type === 'hackathons') {
-                const mode = document.getElementById('in-mode').value;
-                Object.assign(payload, {
-                    name: document.getElementById('in-name').value,
-                    description: document.getElementById('in-desc').value,
-                    hostLink: document.getElementById('in-host').value,
-                    mode: mode,
-                    location: mode === 'online' ? 'Online' : document.getElementById('in-loc').value
-                });
-            } else if (type === 'certificates') {
-                Object.assign(payload, {
-                    title: document.getElementById('in-title').value,
-                    issuer: document.getElementById('in-issuer').value,
-                    imageUrl: tempPhotos[0] || '' // Legacy compat
-                });
-            } else if (type === 'about') {
-                payload = {
-                    text: document.getElementById('in-text').value,
-                    photos: tempPhotos,
-                    photoUrl: tempPhotos[0] || '' // Legacy
-                };
+            if(currentId) {
+                const idx = collectionData[currentType].findIndex(x => x.id == currentId);
+                if(idx > -1) collectionData[currentType][idx] = newItem;
+            } else {
+                collectionData[currentType].push(newItem);
             }
+            
+            saveData();
+            closeEditor();
+            renderAdminList(currentType);
+        }
 
-            try {
-                const colRef = db.collection('artifacts').doc(appId).collection('public').doc('data').collection(type);
-                
-                if (type === 'about') {
-                    const snap = await colRef.limit(1).get();
-                    if (snap.empty) await colRef.add(payload);
-                    else await colRef.doc(snap.docs[0].id).update(payload);
-                } else {
-                    if (id) await colRef.doc(id).update(payload);
-                    else await colRef.add(payload);
-                }
-                closeEditor();
-                // Re-render list if admin is active
-                if(isAdmin && type !== 'about') renderAdminList(type);
-            } catch (e) {
-                console.error("Save Error", e);
-                alert("Error saving data. Files might be too large for database (1MB limit per doc).");
+        function deleteItem(type, id) {
+            if(confirm("Delete?")) {
+                collectionData[type] = collectionData[type].filter(x => x.id != id);
+                saveData();
+                renderAdminList(type);
             }
         }
 
-        async function deleteItem(type, id) {
-            if(!confirm("Delete?")) return;
-            try { 
-                await db.collection('artifacts').doc(appId).collection('public').doc('data').collection(type).doc(id).delete();
-                if(isAdmin && type !== 'about') renderAdminList(type);
-            } 
-            catch (e) { console.error(e); }
-        }
-
-        // --- DETAIL POP-UP WITH CAROUSEL ---
-        let currentCarouselIdx = 0;
-        let currentCarouselPhotos = [];
-
+        // --- DETAILS & FILTERS ---
         function showDetails(type, id) {
-            const item = collectionData[type].find(i => i.id === id);
-            if (!item) return;
-
-            currentCarouselPhotos = item.photos || [];
-            if (currentCarouselPhotos.length === 0 && item.imageUrl) currentCarouselPhotos = [item.imageUrl];
-            currentCarouselIdx = 0;
-
-            const content = document.getElementById('detail-content');
-            content.innerHTML = ''; 
-
-            let carouselHtml = '';
-            if (currentCarouselPhotos.length > 0) {
-                carouselHtml = `
-                    <div class="carousel-container group">
-                        ${currentCarouselPhotos.length > 1 ? `<div class="carousel-btn prev-btn" onclick="moveCarousel(-1)"><i class="fas fa-chevron-left"></i></div>` : ''}
-                        ${currentCarouselPhotos.map((src, i) => `<img src="${src}" class="carousel-img ${i===0?'active':''}" id="c-img-${i}">`).join('')}
-                        ${currentCarouselPhotos.length > 1 ? `<div class="carousel-btn next-btn" onclick="moveCarousel(1)"><i class="fas fa-chevron-right"></i></div>` : ''}
-                    </div>
-                `;
+            const item = collectionData[type].find(x => x.id == id);
+            if(!item) return;
+            
+            let imgs = item.photos || [];
+            let imgHtml = '';
+            if(imgs.length > 0) {
+                imgHtml = `<div class="h-64 bg-black flex justify-center items-center rounded mb-4"><img src="${imgs[0]}" class="max-h-full max-w-full"></div>`;
+                // Add simple arrows if > 1 (omitted for brevity, can add)
             }
 
-            let bodyHtml = '';
-            if (type === 'education') {
-                bodyHtml = `
-                    <h2 class="text-3xl font-bold text-indigo-400 mb-2">${item.school}</h2>
-                    <h3 class="text-xl text-white mb-4">${item.degree} (${item.year})</h3>
-                    <div class="prose prose-invert max-w-none mb-6 text-gray-300">${item.description}</div>
-                `;
-            } else if (type === 'projects') {
-                bodyHtml = `
-                    <h2 class="text-3xl font-bold text-indigo-400 mb-2">${item.title}</h2>
-                    <div class="flex gap-2 mb-4">${(item.tags || '').split(',').map(t => `<span class="px-2 py-1 bg-gray-700 rounded text-sm">${t}</span>`).join('')}</div>
-                    <div class="prose prose-invert max-w-none mb-6 text-gray-300 whitespace-pre-line">${item.description}</div>
-                    ${item.link ? `<a href="${item.link}" target="_blank" class="bg-indigo-600 px-6 py-2 rounded font-bold inline-block hover:bg-indigo-700">Visit Project</a>` : ''}
-                `;
-            } else if (type === 'hackathons') {
-                bodyHtml = `
-                    <h2 class="text-3xl font-bold text-indigo-400 mb-2">${item.name}</h2>
-                    <p class="text-lg text-gray-400 mb-2">${item.mode === 'online' ? 'Online' : item.location}</p>
-                    <div class="prose prose-invert max-w-none mb-6 text-gray-300 whitespace-pre-line">${item.description}</div>
-                    ${item.hostLink ? `<a href="${item.hostLink}" target="_blank" class="bg-indigo-600 px-6 py-2 rounded font-bold inline-block hover:bg-indigo-700">Host Link</a>` : ''}
-                `;
-            }
+            let content = '';
+            if(type === 'education') content = `<h2>${item.school}</h2><p>${item.degree}</p><p>${item.description}</p>`;
+            else if(type === 'projects') content = `<h2>${item.title}</h2><p>${item.description}</p><a href="${item.link}" class="text-blue-400">Link</a>`;
+            else if(type === 'hackathons') content = `<h2>${item.name}</h2><p>${item.description}</p>`;
 
-            content.innerHTML = carouselHtml + bodyHtml;
-            document.getElementById('detail-modal').classList.remove('hidden');
+            document.getElementById('detail-content').innerHTML = imgHtml + '<div class="prose prose-invert">' + content + '</div>';
+            document.getElementById('detail-modal').classList.remove('hidden-force');
         }
 
-        window.moveCarousel = function(dir) {
-            if (currentCarouselPhotos.length <= 1) return;
-            document.getElementById(`c-img-${currentCarouselIdx}`).classList.remove('active');
-            currentCarouselIdx += dir;
-            if (currentCarouselIdx < 0) currentCarouselIdx = currentCarouselPhotos.length - 1;
-            if (currentCarouselIdx >= currentCarouselPhotos.length) currentCarouselIdx = 0;
-            document.getElementById(`c-img-${currentCarouselIdx}`).classList.add('active');
+        function closeDetail() { document.getElementById('detail-modal').classList.add('hidden-force'); }
+        function toggleFilter(id) { document.getElementById(id).classList.toggle('hidden-force'); }
+        
+        function filterProjects(items) {
+            const q = document.getElementById('search-projects').value.toLowerCase();
+            return items.filter(x => (x.title||'').toLowerCase().includes(q));
         }
-
-        function closeDetail() { document.getElementById('detail-modal').classList.add('hidden'); }
-
+        function filterHackathons(items) {
+            const q = document.getElementById('search-hackathons').value.toLowerCase();
+            return items.filter(x => (x.name||'').toLowerCase().includes(q));
+        }
+        function applyProjectFilter() { renderList('projects'); }
+        function applyHackathonFilter() { renderList('hackathons'); }
+        function downloadResume() { 
+            const doc = new window.jspdf.jsPDF();
+            doc.text("Swayam Khangaonkar - Resume", 10, 10);
+            doc.save("resume.pdf");
+        }
     </script>
 </body>
 </html>
