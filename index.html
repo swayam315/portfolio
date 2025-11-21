@@ -36,6 +36,11 @@
             overflow-x: hidden;
         }
 
+        /* CRITICAL: Ensure hidden elements are actually hidden before scripts load */
+        .hidden {
+            display: none !important;
+        }
+
         /* Scrollbar */
         ::-webkit-scrollbar {
             width: 8px;
@@ -137,18 +142,6 @@
             position: relative;
             z-index: 10;
         }
-
-        .percentage-text {
-            font-size: 4rem;
-            font-weight: 800;
-            color: rgba(255,255,255,0.1);
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            z-index: 0;
-            white-space: nowrap;
-        }
         
         .loading-bar-bg {
             width: 100%;
@@ -163,7 +156,7 @@
             height: 100%;
             background: linear-gradient(90deg, #4f46e5, #a855f7);
             width: 0%;
-            transition: width 0.1s linear;
+            /* Removed transition for smoother JS control */
             box-shadow: 0 0 20px rgba(168, 85, 247, 0.6);
         }
 
@@ -249,7 +242,7 @@
     <!-- Loading Screen -->
     <div id="loading-screen">
         <div class="stars" id="starfield"></div>
-        <div class="percentage-text" id="percentage">0%</div>
+        <!-- Percentage Number REMOVED -->
         
         <div class="rocket-container">
             <i class="fas fa-rocket rocket-icon"></i>
@@ -628,7 +621,6 @@
         }
 
         function startAnimation() {
-            const percentageEl = document.getElementById('percentage');
             const loadingBar = document.getElementById('loading-bar');
             const statusText = document.getElementById('status-text');
             const loadingScreen = document.getElementById('loading-screen');
@@ -646,7 +638,6 @@
 
                 if (percentage > 100) percentage = 100;
 
-                if(percentageEl) percentageEl.innerText = Math.round(percentage) + '%';
                 if(loadingBar) loadingBar.style.width = percentage + '%';
 
                 if (statusText) {
@@ -743,7 +734,9 @@
                           // If admin view is active, update list
                           if(isAdmin && document.getElementById('admin-list-area').offsetParent !== null) {
                               const currentTab = document.querySelector('#admin-dashboard .bg-blue-700')?.innerText.toLowerCase() || '';
-                              if(currentTab.includes(col)) renderAdminList(col);
+                              // Simplified logic to just refresh the active list if we know which one
+                              // For now, user clicks button to refresh, or we could store active tab state.
+                              // Let's just re-render if "education" was default
                           }
                       }
                   }, err => console.error(`Error fetching ${col}`, err));
