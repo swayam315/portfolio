@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Swayam Khangaonkar | Portfolio</title>
     
-    <!-- Tailwind CSS -->
+    <!-- Tailwind CSS (CDN is used for standalone file portability) -->
     <script src="https://cdn.tailwindcss.com"></script>
     
     <!-- FontAwesome -->
@@ -31,7 +31,7 @@
             overflow-x: hidden;
         }
 
-        /* FORCE HIDE until animation is done */
+        /* Ensure hidden elements are actually hidden */
         .hidden-force {
             display: none !important;
         }
@@ -106,7 +106,7 @@
     
     <div id="white-flash" class="white-flash"></div>
 
-    <!-- Main Application -->
+    <!-- Main Application (Hidden initially) -->
     <div id="app" class="hidden-force">
         
         <!-- Navigation -->
@@ -127,7 +127,6 @@
                             <button onclick="router('admin')" id="nav-admin-btn" class="bg-gray-800 hover:bg-gray-700 px-3 py-2 rounded-md text-sm font-medium transition border border-gray-600">Admin</button>
                         </div>
                     </div>
-                    <!-- Mobile menu button -->
                     <div class="-mr-2 flex md:hidden">
                         <button onclick="toggleMobileMenu()" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-white hover:bg-gray-700 focus:outline-none">
                             <i class="fas fa-bars"></i>
@@ -180,9 +179,7 @@
                 <div class="flex justify-between items-center mb-8">
                     <h2 class="text-4xl font-bold border-l-4 border-indigo-500 pl-4">Education</h2>
                 </div>
-                <div id="education-list" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="col-span-full text-center text-gray-500 py-10">No education added yet.</div>
-                </div>
+                <div id="education-list" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
             </section>
 
             <!-- PROJECTS SECTION -->
@@ -237,7 +234,7 @@
                 <div class="glass rounded-2xl p-8 md:p-12 flex flex-col md:flex-row items-center gap-12">
                     <div class="w-full md:w-1/3 flex justify-center">
                         <div class="relative w-64 h-64 rounded-full overflow-hidden border-4 border-indigo-500 shadow-2xl">
-                            <img id="about-img" src="https://via.placeholder.com/300" alt="Swayam" class="w-full h-full object-cover">
+                            <img id="about-img" src="" alt="Swayam" class="w-full h-full object-cover">
                         </div>
                     </div>
                     <div class="w-full md:w-2/3">
@@ -383,7 +380,8 @@
 
     <script>
         // --- INIT & LOCAL STORAGE CONFIG ---
-        const DB_KEY = 'swayam_portfolio_db_v2';
+        const DB_KEY = 'swayam_portfolio_db_v3';
+        const VISIT_KEY = 'swayam_portfolio_visits';
         let isAdmin = false;
         let collectionData = {
             education: [], projects: [], hackathons: [], certificates: [], 
@@ -395,11 +393,13 @@
             generateStars();
             startAnimation();
             loadData();
+            logLocalVisit();
         });
 
         function generateStars() {
             const s = document.getElementById('starfield');
             if(!s) return;
+            s.innerHTML = '';
             for(let i=0; i<50; i++) {
                 const d = document.createElement('div');
                 d.className = 'star';
@@ -466,15 +466,20 @@
         }
 
         function saveData() {
-            localStorage.setItem(DB_KEY, JSON.stringify(collectionData));
+            try {
+                localStorage.setItem(DB_KEY, JSON.stringify(collectionData));
+            } catch(e) {
+                alert("Storage Full! Use smaller images.");
+            }
             renderAll();
         }
 
         // --- ROUTING ---
         function router(view) {
             document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden-force'));
-            document.getElementById('mobile-menu').classList.add('hidden'); // use normal hidden for menu logic usually
-            document.getElementById('mobile-menu').style.display = 'none'; // force close
+            const m = document.getElementById('mobile-menu');
+            m.classList.add('hidden');
+            m.style.display = 'none';
 
             if(view === 'admin') {
                 document.getElementById('admin-view').classList.remove('hidden-force');
@@ -482,6 +487,7 @@
                     document.getElementById('login-form').classList.add('hidden-force');
                     document.getElementById('admin-dashboard').classList.remove('hidden-force');
                     renderAdminList('education');
+                    renderVisitorLogs();
                 } else {
                     document.getElementById('login-form').classList.remove('hidden-force');
                     document.getElementById('admin-dashboard').classList.add('hidden-force');
@@ -495,8 +501,13 @@
 
         function toggleMobileMenu() {
             const m = document.getElementById('mobile-menu');
-            if(m.style.display === 'block') m.style.display = 'none';
-            else m.style.display = 'block';
+            if(m.style.display === 'block') {
+                m.style.display = 'none';
+                m.classList.add('hidden');
+            } else {
+                m.style.display = 'block';
+                m.classList.remove('hidden');
+            }
         }
 
         // --- AUTH ---
@@ -513,7 +524,29 @@
         function adminLogout() {
             isAdmin = false;
             document.getElementById('nav-admin-btn').classList.remove('text-green-400');
+            document.getElementById('admin-user').value = '';
+            document.getElementById('admin-pass').value = '';
             router('home');
+        }
+
+        // --- LOGS (MOCKED) ---
+        function logLocalVisit() {
+            let visits = JSON.parse(localStorage.getItem(VISIT_KEY) || '[]');
+            if(visits.length > 20) visits.pop();
+            visits.unshift({ time: new Date().toLocaleString(), platform: navigator.platform });
+            localStorage.setItem(VISIT_KEY, JSON.stringify(visits));
+        }
+
+        function renderVisitorLogs() {
+            const visits = JSON.parse(localStorage.getItem(VISIT_KEY) || '[]');
+            const tbody = document.getElementById('visitor-log-body');
+            if(tbody) {
+                tbody.innerHTML = visits.map(v => `
+                    <tr class="border-b border-gray-700">
+                        <td class="py-2 text-xs">${v.time}</td>
+                        <td class="py-2 text-xs">${v.platform}</td>
+                    </tr>`).join('');
+            }
         }
 
         // --- RENDER ---
@@ -522,9 +555,15 @@
             
             // About
             const abt = collectionData.about || {};
-            document.getElementById('about-text').innerText = abt.text || "Welcome";
-            const pic = (abt.photos && abt.photos.length) ? abt.photos[0] : "https://via.placeholder.com/300";
-            document.getElementById('about-img').src = pic;
+            const txt = document.getElementById('about-text');
+            const img = document.getElementById('about-img');
+            
+            if(txt) txt.innerText = abt.text || "Welcome to my profile.";
+            if(img) {
+                // Fallback image if empty
+                const src = (abt.photos && abt.photos.length) ? abt.photos[0] : "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300' viewBox='0 0 300 300'%3E%3Crect width='300' height='300' fill='%23333'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23777' font-size='20' font-family='sans-serif'%3ENo Image%3C/text%3E%3C/svg%3E";
+                img.src = src;
+            }
         }
 
         function renderList(type) {
@@ -533,7 +572,6 @@
             con.innerHTML = '';
             
             let items = collectionData[type] || [];
-            // Simple filters could go here
             if(type === 'projects') items = filterProjects(items);
             if(type === 'hackathons') items = filterHackathons(items);
 
@@ -550,28 +588,28 @@
                 if(type === 'education') {
                     html = `<div class="glass p-6 rounded-xl hover:bg-gray-800 transition cursor-pointer" onclick="showDetails('education','${item.id}')">
                         ${imgDiv}
-                        <h3 class="text-xl font-bold text-indigo-400">${item.degree}</h3>
-                        <p class="text-lg font-semibold">${item.school}</p>
-                        <p class="text-gray-400 text-sm">${item.year}</p>
+                        <h3 class="text-xl font-bold text-indigo-400">${item.degree||'Degree'}</h3>
+                        <p class="text-lg font-semibold">${item.school||'School'}</p>
+                        <p class="text-gray-400 text-sm">${item.year||'Year'}</p>
                     </div>`;
                 } else if(type === 'projects') {
                     html = `<div class="glass p-6 rounded-xl hover:-translate-y-1 transition">
                         ${imgDiv}
-                        <h3 class="text-xl font-bold text-white">${item.title}</h3>
+                        <h3 class="text-xl font-bold text-white">${item.title||'Project'}</h3>
                         <div class="flex gap-2 my-2">${(item.tags||'').split(',').map(t=>`<span class="text-xs bg-indigo-900 px-2 py-1 rounded">${t}</span>`).join('')}</div>
                         <button onclick="showDetails('projects','${item.id}')" class="text-indigo-400 text-sm font-bold mt-2">View Details</button>
                     </div>`;
                 } else if(type === 'hackathons') {
                     html = `<div class="glass p-6 rounded-xl">
                         ${imgDiv}
-                        <div class="flex justify-between"><h3 class="text-xl font-bold">${item.name}</h3><span class="text-xs border border-gray-600 px-2 rounded">${item.mode}</span></div>
+                        <div class="flex justify-between"><h3 class="text-xl font-bold">${item.name||'Hackathon'}</h3><span class="text-xs border border-gray-600 px-2 rounded">${item.mode||'Mode'}</span></div>
                         <button onclick="showDetails('hackathons','${item.id}')" class="text-indigo-400 text-sm font-bold mt-2">View Details</button>
                     </div>`;
                 } else if(type === 'certificates') {
                     html = `<div class="glass p-4 rounded-xl">
                         <div class="h-32 bg-gray-800 rounded mb-3 overflow-hidden">${imgDiv}</div>
-                        <h4 class="font-bold truncate">${item.title}</h4>
-                        <p class="text-xs text-gray-400">${item.issuer}</p>
+                        <h4 class="font-bold truncate">${item.title||'Certificate'}</h4>
+                        <p class="text-xs text-gray-400">${item.issuer||'Issuer'}</p>
                     </div>`;
                 }
                 con.innerHTML += html;
@@ -659,7 +697,20 @@
         function handleFiles(input) {
             Array.from(input.files).forEach(f => {
                 const r = new FileReader();
-                r.onload = e => { tempPhotos.push(e.target.result); updatePreview(); };
+                r.onload = e => { 
+                    // Compress
+                    const img = new Image();
+                    img.onload = () => {
+                        const cvs = document.createElement('canvas');
+                        const ctx = cvs.getContext('2d');
+                        const scale = 600/img.width;
+                        cvs.width = 600; cvs.height = img.height*scale;
+                        ctx.drawImage(img,0,0,600,cvs.height);
+                        tempPhotos.push(cvs.toDataURL('image/jpeg',0.7));
+                        updatePreview();
+                    };
+                    img.src = e.target.result;
+                };
                 r.readAsDataURL(f);
             });
         }
@@ -716,24 +767,40 @@
         }
 
         // --- DETAILS & FILTERS ---
+        let currentCarouselIdx = 0, currentCarouselPhotos = [];
+
         function showDetails(type, id) {
             const item = collectionData[type].find(x => x.id == id);
             if(!item) return;
             
-            let imgs = item.photos || [];
+            currentCarouselPhotos = item.photos || [];
+            currentCarouselIdx = 0;
+            
             let imgHtml = '';
-            if(imgs.length > 0) {
-                imgHtml = `<div class="h-64 bg-black flex justify-center items-center rounded mb-4"><img src="${imgs[0]}" class="max-h-full max-w-full"></div>`;
-                // Add simple arrows if > 1 (omitted for brevity, can add)
+            if(currentCarouselPhotos.length > 0) {
+                imgHtml = `
+                    <div class="carousel-container">
+                        ${currentCarouselPhotos.length > 1 ? `<button class="carousel-btn prev-btn" onclick="moveCarousel(-1)"><i class="fas fa-chevron-left"></i></button>` : ''}
+                        <img src="${currentCarouselPhotos[0]}" id="main-c-img" class="carousel-img">
+                        ${currentCarouselPhotos.length > 1 ? `<button class="carousel-btn next-btn" onclick="moveCarousel(1)"><i class="fas fa-chevron-right"></i></button>` : ''}
+                    </div>`;
             }
 
             let content = '';
-            if(type === 'education') content = `<h2>${item.school}</h2><p>${item.degree}</p><p>${item.description}</p>`;
-            else if(type === 'projects') content = `<h2>${item.title}</h2><p>${item.description}</p><a href="${item.link}" class="text-blue-400">Link</a>`;
-            else if(type === 'hackathons') content = `<h2>${item.name}</h2><p>${item.description}</p>`;
+            if(type === 'education') content = `<h2 class="text-2xl font-bold text-indigo-400">${item.school}</h2><p class="text-xl">${item.degree}</p><p class="text-sm text-gray-400 mb-4">${item.year}</p><p>${item.description}</p>`;
+            else if(type === 'projects') content = `<h2 class="text-2xl font-bold text-indigo-400">${item.title}</h2><div class="flex gap-2 my-2">${(item.tags||'').split(',').map(t=>`<span class="text-xs bg-indigo-900 px-2 py-1 rounded">${t}</span>`).join('')}</div><p>${item.description}</p><a href="${item.link}" target="_blank" class="text-blue-400 block mt-4">Link</a>`;
+            else if(type === 'hackathons') content = `<h2 class="text-2xl font-bold text-indigo-400">${item.name}</h2><p class="mb-4 text-yellow-400">${item.mode === 'online' ? 'Online' : item.location}</p><p>${item.description}</p>`;
 
             document.getElementById('detail-content').innerHTML = imgHtml + '<div class="prose prose-invert">' + content + '</div>';
             document.getElementById('detail-modal').classList.remove('hidden-force');
+        }
+
+        window.moveCarousel = function(dir) {
+            if(currentCarouselPhotos.length < 2) return;
+            currentCarouselIdx += dir;
+            if(currentCarouselIdx < 0) currentCarouselIdx = currentCarouselPhotos.length - 1;
+            if(currentCarouselIdx >= currentCarouselPhotos.length) currentCarouselIdx = 0;
+            document.getElementById('main-c-img').src = currentCarouselPhotos[currentCarouselIdx];
         }
 
         function closeDetail() { document.getElementById('detail-modal').classList.add('hidden-force'); }
@@ -741,11 +808,22 @@
         
         function filterProjects(items) {
             const q = document.getElementById('search-projects').value.toLowerCase();
-            return items.filter(x => (x.title||'').toLowerCase().includes(q));
+            const checks = document.querySelectorAll('#project-filter-modal input:checked');
+            const tags = Array.from(checks).map(c => c.value.toLowerCase());
+            return items.filter(x => {
+                const m1 = (x.title||'').toLowerCase().includes(q);
+                const m2 = tags.length === 0 || tags.some(t => (x.tags||'').toLowerCase().includes(t));
+                return m1 && m2;
+            });
         }
         function filterHackathons(items) {
             const q = document.getElementById('search-hackathons').value.toLowerCase();
-            return items.filter(x => (x.name||'').toLowerCase().includes(q));
+            const m = document.querySelector('input[name="h-mode"]:checked').value;
+            return items.filter(x => {
+                const m1 = (x.name||'').toLowerCase().includes(q);
+                const m2 = m === 'all' || (x.mode||'offline') === m;
+                return m1 && m2;
+            });
         }
         function applyProjectFilter() { renderList('projects'); }
         function applyHackathonFilter() { renderList('hackathons'); }
